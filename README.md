@@ -1,20 +1,71 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# Project Name
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+## Introduction
+This project is a web application that consists of a client-side built with React, TypeScript, and Vite, and a server-side built with Python. The client-side provides a user interface for interacting with AI agents, while the server-side handles the AI logic and communication with external APIs.
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+## Getting Started
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+### Prerequisites
+- Node.js (v14 or higher)
+- npm (v6 or higher)
+- Python (v3.8 or higher)
+- pip (v20 or higher)
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+### Installation
+
+#### Client
+1. Navigate to the `client` directory:
+    ```sh
+    cd client
+    ```
+2. Install the dependencies:
+    ```sh
+    npm install
+    ```
+
+#### Server
+1. Navigate to the `server` directory:
+    ```sh
+    cd server
+    ```
+2. (Optional) Create a virtual environment:
+    ```sh
+    python -m venv venv
+    ```
+3. (Optional) Activate the virtual environment:
+    - On Windows:
+        ```sh
+        venv\Scripts\activate
+        ```
+    - On macOS/Linux:
+        ```sh
+        source venv/bin/activate
+        ```
+4. Install the dependencies:
+    ```sh
+    pip install -r requirements.txt
+    ```
+
+## Running the Project
+
+### Client
+1. Navigate to the [`client`] directory:
+    ```sh
+    cd client
+    ```
+2. Start the development server:
+    ```sh
+    npm run dev
+    ```
+3. Open your browser and go to `http://localhost:5173/`.
+
+### Server
+1. Navigate to the [`server`] directory:
+    ```sh
+    cd server
+    ```
+2. Start the server:
+    ```sh
+    python app.py
+    ```
+3. The server will be running at `http://127.0.0.1:5000`.
