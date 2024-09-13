@@ -1,0 +1,89 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  background-color: #f0f0f0;
+}
+
+.container {
+  display: flex;
+  width: 100vw;
+}
+
+.left-column {
+  width: calc(100% - 25vw); /* Subtract the width of the right column */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0;
+  text-align: left;
+}
+
+.right-column {
+  width: 25vw;
+  height: 95vh;
+  padding: 20px;
+  background-color: #ffffff;
+  border-left: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: fixed;
+  right: 0;
+  top: 0;
+}
+
+.conversations {
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-bottom: 10px;
+}
+
+.conversation {
+  margin-bottom: 10px;
+}
+
+.submitted-prompt, .ai-response {
+  width: 100%;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-size: 16px;
+  white-space: pre-wrap; /* Preserve whitespace and line breaks */
+  margin-bottom: 5px;
+}
+
+.left-column .generated-recipe {
+  text-align: left; /* or left, depending on your requirement */
+}
+
+.scrollable-input {
+  width: 100%;
+  height: 100px; /* Fixed height for the input area */
+  resize: none;
+  border: none;
+  outline: none;
+  padding: 10px;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+
+.send-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.send-button .send-icon {
+  margin-right: 5px;
+  display: flex;
+  align-items: center;
+}
