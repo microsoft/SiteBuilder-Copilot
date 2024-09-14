@@ -10,13 +10,22 @@ api_key = os.getenv("AZURE_OPENAI_API_KEY")  # Ensure your API key is set in the
 base_url = os.getenv("AZURE_OPENAI_ENDPOINT")
 api_version = "2024-02-01"
 
-agent = AzureOpenAIAgent(
+orchestrator_agent = AzureOpenAIAgent(
     api_key=api_key,
     api_version=api_version,
     base_url=base_url,
     model="gpt4o",
-    system_message="You are a knowledgeable assistant."
+    system_message="You are an AI orchestrator for a website generator. Please provide a responses user inputs."
 )
+
+template_agent = AzureOpenAIAgent(
+    api_key=api_key,
+    api_version=api_version,
+    base_url=base_url,
+    model="gpt4o",
+    system_message="You are an HTML generating agent for a website generator. Please provide htmnl/css/javascript based on the user input."
+)
+
 
 image_resource_url = os.getenv("AZURE_OPENAI_DALLE_ENDPOINT")
 image_api_key = os.getenv("AZURE_OPENAI_DALLE_KEY")
@@ -41,13 +50,13 @@ def send_prompt():
         plaintext_response = generate_plaintext_response(orchestrator_prompt)
 
 
-        html_prompt = f"""Please generate HTML content for a website based on the following prompt:
+        html_prompt = f"""Please generate a html/css/javacript template for a website based on the following prompt:
         
         {prompt}
         
-        The HTML content should be wrapped with delimiters --HTML START-- and --HTML END--.
+        The HTML content should be wrapped with delimiters --TMP START-- and --TMP END--.
         """
-        html_response = agent.send_prompt(html_prompt)
+        html_response = template_agent.send_prompt(html_prompt)
         html_response = extract_html(html_response)
 
         return jsonify({
@@ -92,25 +101,25 @@ def get_image():
         return jsonify({'error': str(e)}), 500
     
 def generate_plaintext_response(orchestrator_prompt):
-    plaintext_response = agent.send_prompt(orchestrator_prompt)
+    plaintext_response = orchestrator_agent.send_prompt(orchestrator_prompt)
     return plaintext_response
 
 def generate_image_prompt(image_prompt):
-    image_response = agent.send_prompt(image_prompt)
+    image_response = orchestrator_agent.send_prompt(image_prompt)
     return image_response
 
 def extract_html(response):
     """
-    Extracts HTML content from the given response string.
+    Extracts template content from the given response string.
     
     Args:
-    response (str): The response string containing HTML content between --HTML START-- and --HTML END--.
+    response (str): The response string containing template content between --TMP START-- and --TMP END--.
     
     Returns:
-    str: The extracted HTML content or an empty string if the markers are not found.
+    str: The extracted template content or an empty string if the markers are not found.
     """
-    start_marker = "--HTML START--"
-    end_marker = "--HTML END--"
+    start_marker = "--TMP START--"
+    end_marker = "--TMP END--"
     
     start_index = response.find(start_marker)
     end_index = response.find(end_marker)
