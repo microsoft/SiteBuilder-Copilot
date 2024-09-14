@@ -12,10 +12,8 @@ from dalle_agent import DallEAgent
 def main():
     # Initialize the DallEAgent with your API key, API version, and base URL
     api_key = os.getenv("AZURE_OPENAI_DALLE_KEY")
-    api_key = "2e6bc1a191404217b624200eb7986d38"
     api_version = "2024-02-01"
     base_url = os.getenv("AZURE_OPENAI_DALLE_ENDPOINT")
-    base_url = "https://dalle3-resource.openai.azure.com/"
     agent = DallEAgent(api_key=api_key, api_version=api_version, base_url=base_url, model="dalle-3")
 
     # Get user input for the image prompt
