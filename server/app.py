@@ -54,7 +54,7 @@ def send_prompt():
         
         {prompt}
         
-        The HTML content should be wrapped with delimiters --TMP START-- and --TMP END--.
+        The HTML content should be wrapped with delimiters +START+ and +END+.
         """
         html_response = template_agent.send_prompt(html_prompt)
         html_response = extract_html(html_response)
@@ -113,13 +113,13 @@ def extract_html(response):
     Extracts template content from the given response string.
     
     Args:
-    response (str): The response string containing template content between --TMP START-- and --TMP END--.
+    response (str): The response string containing template content between +START+ and +END+.
     
     Returns:
     str: The extracted template content or an empty string if the markers are not found.
     """
-    start_marker = "--TMP START--"
-    end_marker = "--TMP END--"
+    start_marker = "+START+"
+    end_marker = "+END+"
     
     start_index = response.find(start_marker)
     end_index = response.find(end_marker)
