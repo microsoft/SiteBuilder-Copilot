@@ -86,6 +86,7 @@ function App() {
           onChange={(e) => setPrompt(e.target.value)}
           onKeyPress={handleKeyPress}
         ></textarea>
+        {/* TODO: Add a button to upload  */}
         <button className="send-button" onClick={handleSend}>
           <span className="send-icon">
             <svg

@@ -3,33 +3,10 @@ from flask_cors import CORS
 import os
 from agents import AzureOpenAIAgent
 from agents import DallEAgent
+from agent_instances import AgentInstances
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
-api_key = os.getenv("AZURE_OPENAI_API_KEY")  # Ensure your API key is set in the environment variables
-base_url = os.getenv("AZURE_OPENAI_ENDPOINT")
-api_version = "2024-02-01"
-
-orchestrator_agent = AzureOpenAIAgent(
-    api_key=api_key,
-    api_version=api_version,
-    base_url=base_url,
-    model="gpt4o",
-    system_message="You are an AI orchestrator for a website generator. Please provide a responses user inputs."
-)
-
-template_agent = AzureOpenAIAgent(
-    api_key=api_key,
-    api_version=api_version,
-    base_url=base_url,
-    model="gpt4o",
-    system_message="You are an HTML generating agent for a website generator. Please provide htmnl/css/javascript based on the user input."
-)
-
-
-image_resource_url = os.getenv("AZURE_OPENAI_DALLE_ENDPOINT")
-image_api_key = os.getenv("AZURE_OPENAI_DALLE_KEY")
-image_gen_agent = DallEAgent(api_key=image_api_key, api_version=api_version, base_url=image_resource_url, model="dall-e-3")
 
 @app.route('/sendprompt', methods=['POST'])
 def send_prompt():
@@ -56,7 +33,8 @@ def send_prompt():
         
         The HTML content should be wrapped with delimiters --TMP START-- and --TMP END--.
         """
-        html_response = template_agent.send_prompt(html_prompt)
+
+        html_response = AgentInstances.template.send_prompt(html_prompt)
         html_response = extract_html(html_response)
 
         return jsonify({
@@ -76,7 +54,7 @@ def get_base64_image():
             return jsonify({'error': 'No prompt provided'}), 400
   
         # Get the base64 encoded image from the LLM client
-        image_response = image_gen_agent.get_base64_image(image_prompt)
+        image_response = AgentInstances.image_gen.get_base64_image(image_prompt)
         image_base64 = f"data:image/png;base64,{image_response}"
 
         return jsonify({'image': image_base64}), 200
@@ -93,7 +71,7 @@ def get_image():
             return jsonify({'error': 'No prompt provided'}), 400
   
         # Get the image URL from the LLM client
-        image_url = image_gen_agent.generate_image(image_prompt)
+        image_url = AgentInstances.image_gen.generate_image(image_prompt)
 
         return jsonify({'image': image_url}), 200
     except Exception as e:
@@ -101,12 +79,8 @@ def get_image():
         return jsonify({'error': str(e)}), 500
     
 def generate_plaintext_response(orchestrator_prompt):
-    plaintext_response = orchestrator_agent.send_prompt(orchestrator_prompt)
+    plaintext_response = AgentInstances.orchestrator.send_prompt(orchestrator_prompt)
     return plaintext_response
-
-def generate_image_prompt(image_prompt):
-    image_response = orchestrator_agent.send_prompt(image_prompt)
-    return image_response
 
 def extract_html(response):
     """

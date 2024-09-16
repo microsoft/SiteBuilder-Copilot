@@ -3,24 +3,29 @@ import requests
 import base64
 
 class DallEAgent:
-    def __init__(self, api_key: str, api_version: str, base_url:str, model: str = "gpt-4o", system_message: str = None):
+    def __init__(self, api_key: str, api_version: str, base_url:str, model: str = "dall-e-3"):
         """
-        Initialize the ImageGenerationAgent with the necessary API key.
-
-        :param api_key: Your OpenAI API key.
+        Initializes the DallEAgent class with the given API key, API version, base URL, model, and optional system message.
+        
+        :param api_key: The API key for Azure OpenAI.
+        :param api_version: The API version for Azure OpenAI.
+        :param base_url: The base URL for the Azure OpenAI endpoint.
+        :param model: The model name to use, default is 'gpt-4o'.
+        :param system_message: An optional system message to guide the behavior of the LLM.
         """
-        print("Initializing ImageGenerationAgent...")
+        self.model = model
+        print("Initializing DallEAgent...")
         self.client = AzureOpenAI(
             api_key=api_key,
-            api_version="2024-02-01",
+            api_version=api_version,
             azure_endpoint=base_url
         )
         print("Initialization complete.")
 
-    def generate_image(self, prompt, size="1024x1024"):
+    def generate_image(self, prompt: str, size: str = "1024x1024") -> str:
         """
-        Generate an image based on the provided prompt.
-
+        Generates an image based on the provided prompt and returns the URL of the generated image.
+        
         :param prompt: The textual description for the image.
         :param size: The size of the generated image (default is '1024x1024').
         :return: The URL of the generated image.
@@ -32,7 +37,7 @@ class DallEAgent:
                 n=1,
                 size=size,
                 quality="standard",
-                model="dalle-3"
+                model=self.model
             )
             print("Image generation response received.")
             image_url = response.data[0].url
@@ -42,10 +47,10 @@ class DallEAgent:
             print(f"An error occurred during image generation: {e}")
             return None
 
-    def get_base64_image(self, prompt, size="1024x1024"):
+    def get_base64_image(self, prompt: str, size: str = "1024x1024") -> str:
         """
-        Generate an image and return its base64-encoded representation.
-
+        Generates an image based on the provided prompt and returns its base64-encoded representation.
+        
         :param prompt: The textual description for the image.
         :param size: The size of the generated image (default is '1024x1024').
         :return: The base64-encoded string of the image.
@@ -58,13 +63,11 @@ class DallEAgent:
 
         try:
             print(f"Downloading image from URL: {image_url}")
-            # Download the image
             response = requests.get(image_url)
             response.raise_for_status()  # Check if the request was successful
             print("Image downloaded successfully.")
             image_content = response.content
 
-            # Encode the image content to base64
             base64_image = base64.b64encode(image_content).decode('utf-8')
             print("Image encoded to base64 successfully.")
             return base64_image
