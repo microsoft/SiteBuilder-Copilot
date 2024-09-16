@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory, url_for
+from mimetypes import guess_type
 from flask_cors import CORS
 import os
 from agent_factory import AgentFactory
@@ -55,13 +56,28 @@ def send_prompt(sessionId):
         html_response = template_agent.send_prompt(html_prompt, file_content)
         html_response = extract_html(html_response)
 
+        template_filename = saveTemplate(html_response, sessionId)
+        template_url = url_for('serve_html_template', session_id=sessionId, filename=template_filename, _external=True)
+
         return jsonify({
             "plaintextdata": plaintext_response,
             "htmldata": html_response,
+            "templateurl": template_url
         }), 200
     except Exception as e:
         print(e)
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/jobs/<session_id>/<filename>", methods=["GET"])
+def serve_html_template(session_id, filename):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    asset_dir = os.path.join(current_dir, 'jobs', session_id, 'template')
+    asset_path = os.path.join(asset_dir, filename)
+    
+    if not os.path.exists(asset_path):
+        return jsonify({"error": ""}), 404
+
+    return send_from_directory(asset_dir, filename, as_attachment=False, mimetype=guess_type(filename)[0])
 
 @app.route('/getbase64image', methods=['POST'])
 def get_base64_image():
@@ -121,6 +137,27 @@ def saveAttachment(file, session_id):
         file_content = f.read()
     
     return file_content
+
+def saveTemplate(html_content, session_id):
+    """
+    Saves the HTML content to an index.html file in the session's directory.
+    
+    Args:
+    html_content (str): The HTML content to save.
+    session_id (str): The session ID to determine the directory.
+    
+    Returns:
+    str: The filename of the saved index.html file.
+    """
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    template_dir = os.path.join(current_dir, 'jobs', session_id, 'template')
+    os.makedirs(template_dir, exist_ok=True)
+    file_path = os.path.join(template_dir, 'index.html')
+    
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+    
+    return 'index.html'
 
 def extract_html(response):
     """

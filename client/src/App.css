@@ -139,8 +139,21 @@ html, body {
   padding: 0;
   border-bottom: 2px solid #eee;
   color: #888;
+
 }
 .tab-list li {
   display: block;
   margin-bottom: -2px;
+}
+
+.container, .tabs, .tab-panel {
+  display: flex;
+  height: 100vh; /* Full viewport height */
+  width: 100%;;
+}
+
+#generated-content-iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
 }

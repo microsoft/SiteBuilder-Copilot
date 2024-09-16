@@ -27,6 +27,7 @@ function App() {
   }, []);
   const [htmlSource, setHtmlSource] = useState<string>('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
   const [response, setResponse] = useState<string>('{}');
+  const [iframeUrl, setIframeUrl] = useState<string>('');
 
   const scrollToLastElement = (elementId: string) => {
     const element = document.getElementById(elementId);
@@ -62,7 +63,7 @@ function App() {
 
         const data = await response.json();
         const aiResponse = data.plaintextdata;
-        const htmlData = data.htmldata;
+        const templateUrl = data.templateurl;
 
         // Update the conversations with the actual AI response
         setConversations((prevConversations) =>
@@ -74,7 +75,11 @@ function App() {
         );
         scrollToLastElement('conversation');
 
-        setHtmlSource(htmlData);
+        if (templateUrl) {
+          setIframeUrl(templateUrl);
+        } else {
+          setHtmlSource(data.htmldata);
+        }
         setResponse(JSON.stringify(data));
 
         const placeholderBanner = document.getElementById('placeholder-banner');
@@ -105,7 +110,11 @@ function App() {
       <div className="left-column">
         <TabList activeTabIndex={0}>
           <TabItem name="Website">
-            <div id="generated-content" dangerouslySetInnerHTML={{__html: htmlSource}}/>
+            {iframeUrl ? (
+              <iframe id="generated-content-iframe" src={iframeUrl} />
+            ) : (
+              <div id="generated-content" dangerouslySetInnerHTML={{ __html: htmlSource }} />
+            )}
           </TabItem>
           <TabItem name="Source">
             <div id="source-code-content"><pre>{htmlSource}</pre></div>

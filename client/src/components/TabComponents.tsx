@@ -1,6 +1,6 @@
-// https://blog.logrocket.com/how-to-build-tab-component-react/
 import React, { ReactElement, useState } from "react";
 import { TabItemProps, TabListProps } from "../types/TabTypes";
+import './TabComponents.css'; // Ensure you import the CSS file
 
 export const TabItem: React.FC<TabItemProps> = ({ name, children }) => (
     <div className="tab-panel" id={`${name}`}>{children}</div>
