@@ -3,18 +3,20 @@ from flask_cors import CORS
 import os
 from agents import AzureOpenAIAgent
 from agents import DallEAgent
+from config import config
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
-api_key = os.getenv("AZURE_OPENAI_API_KEY")  # Ensure your API key is set in the environment variables
-base_url = os.getenv("AZURE_OPENAI_ENDPOINT")
+api_key = config.AZURE_OPENAI_API_KEY  # Ensure your API key is set in the environment variables
+base_url = config.AZURE_OPENAI_ENDPOINT
+model = config.AZURE_OPENAI_MODEL
 api_version = "2024-02-01"
 
 orchestrator_agent = AzureOpenAIAgent(
     api_key=api_key,
     api_version=api_version,
     base_url=base_url,
-    model="gpt4o",
+    model=model,
     system_message="You are an AI orchestrator for a website generator. Please provide a responses user inputs."
 )
 
@@ -22,7 +24,7 @@ template_agent = AzureOpenAIAgent(
     api_key=api_key,
     api_version=api_version,
     base_url=base_url,
-    model="gpt4o",
+    model=model,
     system_message="You are an HTML generating agent for a website generator. Please provide html/css/javascript based on the user input."
 )
 

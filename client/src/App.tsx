@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ConversationPanel from './ConversationPanel';
+import { TabItem, TabList } from './components/TabComponents';
 import './App.css';
 
 // Function to generate a GUID
@@ -24,6 +25,8 @@ function App() {
     const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
     window.history.replaceState({ path: newUrl }, '', newUrl);
   }, []);
+  const [htmlSource, setHtmlSource] = useState<string>('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
+  const [response, setResponse] = useState<string>('{}');
 
   const scrollToLastElement = (elementId: string) => {
     const element = document.getElementById(elementId);
@@ -71,11 +74,9 @@ function App() {
         );
         scrollToLastElement('conversation');
 
-        // Inject the HTML data into the generated-content div and remove the placeholder banner
-        const generatedContentDiv = document.getElementById('generated-content');
-        if (generatedContentDiv) {
-          generatedContentDiv.innerHTML = htmlData;
-        }
+        setHtmlSource(htmlData);
+        setResponse(JSON.stringify(data));
+
         const placeholderBanner = document.getElementById('placeholder-banner');
         if (placeholderBanner) {
           placeholderBanner.remove();
@@ -102,8 +103,17 @@ function App() {
   return (
     <div className="container">
       <div className="left-column">
-        <h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>
-        <div id="generated-content" />
+        <TabList activeTabIndex={0}>
+          <TabItem name="Website">
+            <div id="generated-content" dangerouslySetInnerHTML={{__html: htmlSource}}/>
+          </TabItem>
+          <TabItem name="Source">
+            <div id="source-code-content"><pre>{htmlSource}</pre></div>
+          </TabItem>
+          <TabItem name="Raw">
+            <div id="raw-response-content"><pre>{response}</pre></div>
+          </TabItem>
+        </TabList>      
       </div>
       <div className="right-column">
         <ConversationPanel conversations={conversations} />
