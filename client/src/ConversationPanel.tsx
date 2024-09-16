@@ -12,6 +12,10 @@ interface ConversationPanelProps {
 const ConversationPanel: React.FC<ConversationPanelProps> = ({ conversations }) => {
   return (
     <div id="conversation" className="conversations">
+      <div id="new-chat-button-wrapper">
+        <button id="new-chat-button" onClick={() => alert("new chat")}>New Chat</button>
+      </div>
+      <br/>
       {conversations.map((conversation, index) => (
         <div key={index} className="conversation">
           <div className="submitted-prompt">
