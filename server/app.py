@@ -31,8 +31,8 @@ image_resource_url = os.getenv("AZURE_OPENAI_DALLE_ENDPOINT")
 image_api_key = os.getenv("AZURE_OPENAI_DALLE_KEY")
 image_gen_agent = DallEAgent(api_key=image_api_key, api_version=api_version, base_url=image_resource_url, model="dall-e-3")
 
-@app.route('/sendprompt', methods=['POST'])
-def send_prompt():
+@app.route('/sendprompt/<sessionId>', methods=['POST'])
+def send_prompt(sessionId):
     if 'prompt' not in request.form:
         return jsonify({"error": "No prompt provided"}), 400
 
@@ -40,16 +40,19 @@ def send_prompt():
     file = request.files.get('file')
     file_content = None
 
+    # Ensure the jobs directory exists
+    jobs_dir = os.path.join('jobs')
+    if not os.path.exists(jobs_dir):
+        os.makedirs(jobs_dir)
+
+    # Ensure the session directory exists
+    session_dir = os.path.join(jobs_dir, sessionId)
+    if not os.path.exists(session_dir):
+        os.makedirs(session_dir)
+
     try:
         if file:
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            upload_dir = os.path.join(current_dir, 'jobs')
-            os.makedirs(upload_dir, exist_ok=True)
-            file_path = os.path.join(upload_dir, file.filename)
-            file.save(file_path)
-            
-            with open(file_path, 'rb') as f:
-                file_content = f.read()
+            file_content = saveAttachment(file, sessionId)
                 
         #TODO: Parallelize these prompts
         orchestrator_prompt = f"""Please play the role of an AI orchestrator for a website generator and respond to some user input.
@@ -111,6 +114,18 @@ def get_image():
         print(e)
         return jsonify({'error': str(e)}), 500
     
+def saveAttachment(file, session_id):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    upload_dir = os.path.join(current_dir, 'jobs', session_id, 'uploads')
+    os.makedirs(upload_dir, exist_ok=True)
+    file_path = os.path.join(upload_dir, file.filename)
+    file.save(file_path)
+    
+    with open(file_path, 'rb') as f:
+        file_content = f.read()
+    
+    return file_content
+
 def generate_image_prompt(image_prompt):
     image_response = orchestrator_agent.send_prompt(image_prompt)
     return image_response

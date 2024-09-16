@@ -1,11 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ConversationPanel from './ConversationPanel';
 import './App.css';
+
+// Function to generate a GUID
+const generateGUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0,
+      v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
 
 function App() {
   const [prompt, setPrompt] = useState('');
   const [conversations, setConversations] = useState<{ prompt: string, response: string }[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [sessionId, setSessionId] = useState<string>('');
+
+  useEffect(() => {
+    // Generate a GUID and update the URL query string
+    const guid = generateGUID();
+    setSessionId(guid);
+    const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
+    window.history.replaceState({ path: newUrl }, '', newUrl);
+  }, []);
 
   const scrollToLastElement = (elementId: string) => {
     const element = document.getElementById(elementId);
@@ -30,7 +48,7 @@ function App() {
           formData.append('file', selectedFile);
         }
 
-        const response = await fetch('http://127.0.0.1:5000/sendprompt', {
+        const response = await fetch(`http://127.0.0.1:5000/sendprompt/${sessionId}`, {
           method: 'POST',
           body: formData,
         });
