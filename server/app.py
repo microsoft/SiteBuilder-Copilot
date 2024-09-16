@@ -23,7 +23,7 @@ template_agent = AzureOpenAIAgent(
     api_version=api_version,
     base_url=base_url,
     model="gpt4o",
-    system_message="You are an HTML generating agent for a website generator. Please provide htmnl/css/javascript based on the user input."
+    system_message="You are an HTML generating agent for a website generator. Please provide html/css/javascript based on the user input."
 )
 
 
@@ -33,12 +33,24 @@ image_gen_agent = DallEAgent(api_key=image_api_key, api_version=api_version, bas
 
 @app.route('/sendprompt', methods=['POST'])
 def send_prompt():
-    data = request.get_json()
-    if 'prompt' not in data:
+    if 'prompt' not in request.form:
         return jsonify({"error": "No prompt provided"}), 400
 
-    prompt = data['prompt']
+    prompt = request.form['prompt']
+    file = request.files.get('file')
+    file_content = None
+
     try:
+        if file:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            upload_dir = os.path.join(current_dir, 'jobs')
+            os.makedirs(upload_dir, exist_ok=True)
+            file_path = os.path.join(upload_dir, file.filename)
+            file.save(file_path)
+            
+            with open(file_path, 'rb') as f:
+                file_content = f.read()
+                
         #TODO: Parallelize these prompts
         orchestrator_prompt = f"""Please play the role of an AI orchestrator for a website generator and respond to some user input.
         It should be no more than a paragraph or 200 characters long and only in plaintext.
@@ -47,8 +59,7 @@ def send_prompt():
         
         {prompt}"""
         
-        plaintext_response = generate_plaintext_response(orchestrator_prompt)
-
+        plaintext_response = orchestrator_agent.send_prompt(orchestrator_prompt, file_content)
 
         html_prompt = f"""Please generate a html/css/javacript template for a website based on the following prompt:
         
@@ -56,7 +67,7 @@ def send_prompt():
         
         The HTML content should be wrapped with delimiters +START+ and +END+.
         """
-        html_response = template_agent.send_prompt(html_prompt)
+        html_response = template_agent.send_prompt(html_prompt, file_content)
         html_response = extract_html(html_response)
 
         return jsonify({
@@ -100,10 +111,6 @@ def get_image():
         print(e)
         return jsonify({'error': str(e)}), 500
     
-def generate_plaintext_response(orchestrator_prompt):
-    plaintext_response = orchestrator_agent.send_prompt(orchestrator_prompt)
-    return plaintext_response
-
 def generate_image_prompt(image_prompt):
     image_response = orchestrator_agent.send_prompt(image_prompt)
     return image_response

@@ -82,10 +82,43 @@ html, body {
   border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
+  width: 20vw;
+  height: 30px;
 }
 
 .send-button .send-icon {
   margin-right: 5px;
   display: flex;
   align-items: center;
+}
+
+.button-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.send-button {
+  margin-right: 8px;
+  height: 40px;
+}
+
+.file-input-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+
+.file-input-label {
+  cursor: pointer;
+  display: inline-block;
+  padding: 10px;
+  padding-left: 15px;
+  padding-right: 15px;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  transition: background-color 0.3s;
+}
+
+.file-input-label:hover {
+  background-color: #e0e0e0;
 }

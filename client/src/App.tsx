@@ -5,6 +5,7 @@ import './App.css';
 function App() {
   const [prompt, setPrompt] = useState('');
   const [conversations, setConversations] = useState<{ prompt: string, response: string }[]>([]);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const scrollToLastElement = (elementId: string) => {
     const element = document.getElementById(elementId);
@@ -23,12 +24,15 @@ function App() {
       setPrompt('');
 
       try {
+        const formData = new FormData();
+        formData.append('prompt', prompt);
+        if (selectedFile) {
+          formData.append('file', selectedFile);
+        }
+
         const response = await fetch('http://127.0.0.1:5000/sendprompt', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ prompt }),
+          body: formData,
         });
 
         if (!response.ok) {
@@ -71,6 +75,12 @@ function App() {
     }
   };
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setSelectedFile(event.target.files[0]);
+    }
+  };
+
   return (
     <div className="container">
       <div className="left-column">
@@ -86,25 +96,43 @@ function App() {
           onChange={(e) => setPrompt(e.target.value)}
           onKeyPress={handleKeyPress}
         ></textarea>
-        <button className="send-button" onClick={handleSend}>
-          <span className="send-icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M2.5 19.5L21 12 2.5 4.5v7l13 0-13 0v7z"
-              />
-            </svg>
-          </span>
-        </button>
+        {selectedFile && (
+          <div className="selected-file-name">
+            Selected file: {selectedFile.name}
+          </div>
+        )}
+        <div className="button-wrapper">
+          <button className="send-button" onClick={handleSend}>
+            <span className="send-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M2.5 19.5L21 12 2.5 4.5v7l13 0-13 0v7z"
+                />
+              </svg>
+            </span>
+          </button>
+          <div className="file-input-wrapper">
+            <input
+              type="file"
+              id="file-input"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+            <label htmlFor="file-input" className="file-input-label">
+              <i className="fas fa-paperclip"></i>
+            </label>
+          </div>
+        </div>
       </div>
     </div>
   );

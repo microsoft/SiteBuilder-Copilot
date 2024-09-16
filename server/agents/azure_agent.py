@@ -1,7 +1,7 @@
 from openai import AzureOpenAI
 
 class AzureOpenAIAgent:
-    def __init__(self, api_key: str, api_version: str, base_url:str, model: str = "gpt-4o", system_message: str = None):
+    def __init__(self, api_key: str, api_version: str, base_url: str, model: str = "gpt-4o", system_message: str = None):
         """
         Initializes the OpenAILLMAgent class with the given API key, API version, model, and optional system message.
         
@@ -25,21 +25,26 @@ class AzureOpenAIAgent:
         if system_message:
             self.messages.append({"role": "system", "content": system_message})
     
-    def send_prompt(self, prompt: str) -> dict:
+    def send_prompt(self, prompt: str, file_content: bytes = None) -> dict:
         """
         Sends a prompt to the LLM and returns the response. Continues an existing conversation if a conversation ID is provided.
         
         :param prompt: The text prompt to send to the LLM.
+        :param file_content: The content of the file to be uploaded, if any.
         :return: A dictionary containing the LLM's response.
         """
         # Add user prompt to messages
         self.messages.append({"role": "user", "content": prompt})
         
+        # If file content is provided, add it to the messages
+        if file_content:
+            self.messages.append({"role": "user", "content": f"File content: {file_content}"})
+        
         # Send the conversation history to the model
         response = self.client.chat.completions.create(
-            model = self.model,
+            model=self.model,
             messages=self.messages,
-            max_tokens=2000 
+            max_tokens=4000 
         )
             
         # Add LLM's response to the conversation history
@@ -61,7 +66,7 @@ class AzureOpenAIAgent:
         self.messages.append({"role": "user", "content": prompt})
         
         response = self.client.images.generate(
-            model="gpt4o",
+            model=self.model,
             prompt=prompt,
             n=1,
             size="1024x1024"

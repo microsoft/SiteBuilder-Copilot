@@ -9,6 +9,7 @@ class DallEAgent:
 
         :param api_key: Your OpenAI API key.
         """
+        self.model = model
         print("Initializing ImageGenerationAgent...")
         self.client = AzureOpenAI(
             api_key=api_key,
@@ -32,7 +33,7 @@ class DallEAgent:
                 n=1,
                 size=size,
                 quality="standard",
-                model="dalle-3"
+                model=self.model
             )
             print("Image generation response received.")
             image_url = response.data[0].url
