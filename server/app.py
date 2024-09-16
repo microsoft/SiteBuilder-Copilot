@@ -1,37 +1,13 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
-from agents import AzureOpenAIAgent
-from agents import DallEAgent
-from config import config
+from agent_factory import AgentFactory
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
-api_key = config.AZURE_OPENAI_API_KEY  # Ensure your API key is set in the environment variables
-base_url = config.AZURE_OPENAI_ENDPOINT
-model = config.AZURE_OPENAI_MODEL
-api_version = "2024-02-01"
 
-orchestrator_agent = AzureOpenAIAgent(
-    api_key=api_key,
-    api_version=api_version,
-    base_url=base_url,
-    model=model,
-    system_message="You are an AI orchestrator for a website generator. Please provide a responses user inputs."
-)
-
-template_agent = AzureOpenAIAgent(
-    api_key=api_key,
-    api_version=api_version,
-    base_url=base_url,
-    model=model,
-    system_message="You are an HTML generating agent for a website generator. Please provide html/css/javascript based on the user input."
-)
-
-
-image_resource_url = os.getenv("AZURE_OPENAI_DALLE_ENDPOINT")
-image_api_key = os.getenv("AZURE_OPENAI_DALLE_KEY")
-image_gen_agent = DallEAgent(api_key=image_api_key, api_version=api_version, base_url=image_resource_url, model="dall-e-3")
+# Initialize the AgentFactory
+agent_factory = AgentFactory()
 
 @app.route('/sendprompt/<sessionId>', methods=['POST'])
 def send_prompt(sessionId):
@@ -51,6 +27,10 @@ def send_prompt(sessionId):
     session_dir = os.path.join(jobs_dir, sessionId)
     if not os.path.exists(session_dir):
         os.makedirs(session_dir)
+
+    agents = agent_factory.get_or_create_agents(sessionId)
+    orchestrator_agent = agents["orchestrator_agent"]
+    template_agent = agents["template_agent"]
 
     try:
         if file:
@@ -90,6 +70,13 @@ def get_base64_image():
         image_prompt = data.get('image_prompt')
         if not image_prompt:
             return jsonify({'error': 'No prompt provided'}), 400
+
+        session_id = data.get('session_id')
+        if not session_id:
+            return jsonify({'error': 'No session ID provided'}), 400
+
+        agents = agent_factory.get_or_create_agents(session_id)
+        image_gen_agent = agents["image_gen_agent"]
   
         # Get the base64 encoded image from the LLM client
         image_response = image_gen_agent.get_base64_image(image_prompt)
@@ -107,6 +94,13 @@ def get_image():
         image_prompt = data.get('image_prompt')
         if not image_prompt:
             return jsonify({'error': 'No prompt provided'}), 400
+
+        session_id = data.get('session_id')
+        if not session_id:
+            return jsonify({'error': 'No session ID provided'}), 400
+
+        agents = agent_factory.get_or_create_agents(session_id)
+        image_gen_agent = agents["image_gen_agent"]
   
         # Get the image URL from the LLM client
         image_url = image_gen_agent.generate_image(image_prompt)
@@ -127,10 +121,6 @@ def saveAttachment(file, session_id):
         file_content = f.read()
     
     return file_content
-
-def generate_image_prompt(image_prompt):
-    image_response = orchestrator_agent.send_prompt(image_prompt)
-    return image_response
 
 def extract_html(response):
     """
