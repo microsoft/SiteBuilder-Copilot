@@ -26,7 +26,8 @@ function App() {
   const [response, setResponse] = useState<string>('{}');
   const [iframeUrl, setIframeUrl] = useState<string>('');
   const [sessionHistory, setSessionHistory] = useState<string[]>([]);
-  
+  const [loading, setLoading] = useState<boolean>(false);
+
   useEffect(() => {
     const checkAndSetIframeUrl = async (guid: string) => {
       const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
@@ -66,7 +67,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    async function doFetchSource(url : string) {
+    async function doFetchSource(url: string) {
       const sourceCodeResponse = await fetch(url);
       if (sourceCodeResponse.ok) {
         setHtmlSource(await sourceCodeResponse.text());
@@ -86,33 +87,40 @@ function App() {
     }
   };
 
-  const reloadIframe = () => { 
+  const reloadIframe = () => {
     const iframe = document.getElementById('generated-content-iframe') as HTMLIFrameElement;
     // eslint-disable-next-line no-self-assign
     iframe.src = iframe.src;
   }
 
-  // TODO: Re-enable Jonathan's stuff
-  // const fetchData = async (baseUrl: string, endpoint: string, method: string, body: FormData) => {
-  //   const response = await fetch(`${baseUrl}/${endpoint}`, {
-  //     method: method,
-  //     body: body,
-  //   });
-
-  //   if (!response.ok) {
-  //     throw new Error('Network response was not ok');
-  //   }
-
-  //   const data = await response.json();
-
-  //   return data;
-  // }
+  const pollForOutput = async (sessionId: string) => {
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await fetch(LOCAL_SERVER_BASE_URL + `getoutput/${sessionId}`, {
+          method: 'POST',
+        });
+        const data = await response.json();
+        if (data.status === 'ready') {
+          clearInterval(intervalId);
+          setHtmlSource(data.htmldata);
+          setIframeUrl(data.templateurl);
+          setLoading(false);
+          reloadIframe();
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }, 1000);
+  };
 
   const handleSend = async () => {
+    const currentSessionId = sessionId || getQueryParam('sessionId');
+
     if (prompt.trim()) {
       setConversations([...conversations, { prompt, response: 'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />' }]);
       scrollToLastElement('conversation');
       setPrompt('');
+      setLoading(true);
 
       try {
         const formData = new FormData();
@@ -121,7 +129,7 @@ function App() {
           formData.append('file', selectedFile);
         }
 
-        const response = await fetch(LOCAL_SERVER_BASE_URL + `sendprompt/${sessionId}`, {
+        const response = await fetch(LOCAL_SERVER_BASE_URL + `sendprompt/${currentSessionId}`, {
           method: 'POST',
           body: formData,
         });
@@ -131,8 +139,7 @@ function App() {
         }
 
         const data = await response.json();
-        const aiResponse = data.plaintextdata;
-        const templateUrl = data.templateurl;
+        const aiResponse = data.response;
 
         setConversations((prevConversations) =>
           prevConversations.map((conv, index) =>
@@ -143,14 +150,11 @@ function App() {
         );
         scrollToLastElement('conversation');
 
-        if (templateUrl) {
-          setIframeUrl(templateUrl);
-        } else {
-          setHtmlSource(data.htmldata);
+        if (currentSessionId) {
+          pollForOutput(currentSessionId);
         }
-        setResponse(JSON.stringify(data));
-        reloadIframe();
 
+        setResponse(JSON.stringify(data));
         const placeholderBanner = document.getElementById('placeholder-banner');
         if (placeholderBanner) {
           placeholderBanner.remove();
@@ -162,7 +166,7 @@ function App() {
       }
     }
   };
-  
+
   const handleNewChat = async () => {
     try {
       const response = await fetch(LOCAL_SERVER_BASE_URL + `newchat/${sessionId}`, {
@@ -199,22 +203,34 @@ function App() {
 
   return (
     <div className="container">
-      <div className="left-column">
+      <div className="left-column" style={{ width: '100%' }}>
         <TabList activeTabIndex={0}>
           <TabItem name="Website">
-            {iframeUrl ? (
-              <iframe id="generated-content-iframe" src={iframeUrl} />
-            ) : (
-              <div id="generated-content" dangerouslySetInnerHTML={{ __html: htmlSource }} />
-            )}
+            <div className="content-wrapper" style={{ position: 'relative', width: '100%', height: '100%' }}>
+              {loading && (
+                <div className="loading-spinner" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1 }}>
+                  Generating Changes...
+                  <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style={{ width: '20px', height: '20px' }} />
+                </div>
+              )}
+              {iframeUrl ? (
+                <iframe id="generated-content-iframe" src={iframeUrl} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0 }} />
+              ) : (
+                <div id="generated-content" dangerouslySetInnerHTML={{ __html: htmlSource }} style={{ width: '100%', height: '100%' }} />
+              )}
+            </div>
           </TabItem>
           <TabItem name="Source">
-            <div id="source-code-content"><pre>{htmlSource}</pre></div>
+            <div id="source-code-content" style={{ width: '100%', height: '100%' }}>
+              <pre>{htmlSource}</pre>
+            </div>
           </TabItem>
           <TabItem name="Raw">
-            <div id="raw-response-content"><pre>{response}</pre></div>
+            <div id="raw-response-content" style={{ width: '100%', height: '100%' }}>
+              <pre>{response}</pre>
+            </div>
           </TabItem>
-        </TabList>      
+        </TabList>
       </div>
       <div className="right-column">
         <ConversationPanel conversations={conversations} handleNewChat={handleNewChat} />
@@ -231,11 +247,11 @@ function App() {
           </div>
         )}
         <div className="button-wrapper">
-        <button className="send-button" onClick={handleSend}>
-          <span className="send-icon">
-            <i className="fas fa-paper-plane"></i>
-          </span>
-        </button>
+          <button className="send-button" onClick={handleSend}>
+            <span className="send-icon">
+              <i className="fas fa-paper-plane"></i>
+            </span>
+          </button>
           <div className="file-input-wrapper">
             <input
               type="file"
