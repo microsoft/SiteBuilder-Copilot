@@ -136,7 +136,17 @@ def new_chat(sessionId):
         return jsonify({'message': 'New chat session initialized'}), 200
     except Exception as e:
         print(e)
-        return jsonify({'error': str(e)}), 500        
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/sessionhistory', methods=['GET'])
+def get_session_history():
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        jobs_dir = os.path.join(current_dir, 'jobs')
+        return jsonify([d for d in os.listdir(jobs_dir) if os.path.isdir(os.path.join(jobs_dir, d))])
+    except Exception as e:
+        print(e)
+        return jsonify({'error': str(e)}), 500
 
 def saveAttachment(file, session_id):
     upload_dir = os.path.join(get_session_directory(session_id), 'uploads')
