@@ -60,20 +60,27 @@ function App() {
     }
   };
 
-  const fetchData = async (baseUrl: string, endpoint: string, method: string, body: FormData) => {
-    const response = await fetch(`${baseUrl}/${endpoint}`, {
-      method: method,
-      body: body,
-    });
-
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-
-    const data = await response.json();
-
-    return data;
+  const reloadIframe = () => { 
+    const iframe = document.getElementById('generated-content-iframe') as HTMLIFrameElement;
+    // eslint-disable-next-line no-self-assign
+    iframe.src = iframe.src;
   }
+
+  // TODO: Re-enable Jonathan's stuff
+  // const fetchData = async (baseUrl: string, endpoint: string, method: string, body: FormData) => {
+  //   const response = await fetch(`${baseUrl}/${endpoint}`, {
+  //     method: method,
+  //     body: body,
+  //   });
+
+  //   if (!response.ok) {
+  //     throw new Error('Network response was not ok');
+  //   }
+
+  //   const data = await response.json();
+
+  //   return data;
+  // }
 
   const handleSend = async () => {
     if (prompt.trim()) {
@@ -83,20 +90,24 @@ function App() {
       setPrompt('');
 
       try {
-        const copilotFormData = new FormData();
-        copilotFormData.append('prompt', prompt);
+        const formData = new FormData();
+        formData.append('prompt', prompt);
         if (selectedFile) {
-          copilotFormData.append('file', selectedFile);
+          formData.append('file', selectedFile);
         }
 
-        const copilotData = await fetchData("http://127.0.0.1:5000", `/sendprompt/${sessionId}`, 'POST', copilotFormData);
-        const aiResponse = copilotData.plaintextdata;
-        const htmlData = copilotData.htmldata;
+        const response = await fetch(`http://127.0.0.1:5000/sendprompt/${sessionId}`, {
+          method: 'POST',
+          body: formData,
+        });
 
-        const imageFormData = new FormData();
-        imageFormData.append('prompt', prompt);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
 
-        const imageData = await fetchData("http://127.0.0.1:5000", `/getimage/${sessionId}`, 'POST', imageFormData);
+        const data = await response.json();
+        const aiResponse = data.plaintextdata;
+        const templateUrl = data.templateurl;
 
         // Update the conversations with the actual AI response
         setConversations((prevConversations) =>
@@ -118,6 +129,7 @@ function App() {
           setHtmlSource(data.htmldata);
         }
         setResponse(JSON.stringify(data));
+        reloadIframe();
 
         const placeholderBanner = document.getElementById('placeholder-banner');
         if (placeholderBanner) {

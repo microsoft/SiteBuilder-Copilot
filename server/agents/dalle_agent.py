@@ -1,15 +1,24 @@
 from openai import AzureOpenAI
-import requests
-import base64
+import json
+import os
 
 class DallEAgent:
-    def __init__(self, api_key: str, api_version: str, base_url:str, model: str = "dall-e-3"):
+    def __init__(self, api_key: str, api_version: str, base_url:str, model: str = "dall-e-3", messages: list = None):
         """
         Initialize the ImageGenerationAgent with the necessary API key.
 
         :param api_key: Your OpenAI API key.
+        :param api_version: The API version for Azure OpenAI.
+        :param base_url: The base URL for Azure OpenAI.
+        :param model: The model name to use, default is 'gpt-4o'.
+        :param messages: An optional list of messages to initialize the conversation history.
         """
+        self.api_key = api_key
+        self.api_version = api_version
+        self.base_url = base_url
         self.model = model
+        self.messages = messages if messages is not None else []
+
         print("Initializing ImageGenerationAgent...")
         self.client = AzureOpenAI(
             api_key=api_key,
@@ -43,32 +52,56 @@ class DallEAgent:
             print(f"An error occurred during image generation: {e}")
             return None
 
-    def get_base64_image(self, prompt, size="1024x1024"):
+    def serialize(self) -> str:
         """
-        Generate an image and return its base64-encoded representation.
+        Serializes the state of the agent to a JSON string.
 
-        :param prompt: The textual description for the image.
-        :param size: The size of the generated image (default is '1024x1024').
-        :return: The base64-encoded string of the image.
+        :return: A JSON string representing the state of the agent.
         """
-        print(f"Getting base64 image for prompt: '{prompt}' and size: '{size}'")
-        image_url = self.generate_image(prompt, size)
-        if image_url is None:
-            print("Failed to generate image.")
-            return None
+        return json.dumps({
+            "api_key": self.api_key,
+            "api_version": self.api_version,
+            "base_url": self.base_url,
+            "model": self.model,
+            "messages": self.messages
+        })
 
-        try:
-            print(f"Downloading image from URL: {image_url}")
-            # Download the image
-            response = requests.get(image_url)
-            response.raise_for_status()  # Check if the request was successful
-            print("Image downloaded successfully.")
-            image_content = response.content
+    @classmethod
+    def deserialize(cls, json_str: str):
+        """
+        Deserializes a JSON string to a DallEAgent instance.
 
-            # Encode the image content to base64
-            base64_image = base64.b64encode(image_content).decode('utf-8')
-            print("Image encoded to base64 successfully.")
-            return base64_image
-        except Exception as e:
-            print(f"An error occurred while fetching or encoding the image: {e}")
-            return None
+        :param json_str: A JSON string representing the state of the agent.
+        :return: A DallEAgent instance.
+        """
+        data = json.loads(json_str)
+        return cls(
+            api_key=data["api_key"],
+            api_version=data["api_version"],
+            base_url=data["base_url"],
+            model=data["model"],
+            messages=data["messages"]
+        )
+
+    def save(self, filepath: str):
+        """
+        Saves the serialized state of the agent to a file.
+        
+        :param filepath: The path to the file where the state should be saved.
+        """
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        
+        with open(filepath, 'w') as f:
+            f.write(self.serialize())
+
+    @classmethod
+    def load(cls, filepath: str):
+        """
+        Loads the state of the agent from a file and returns a DallEAgent instance.
+
+        :param filepath: The path to the file from which the state should be loaded.
+        :return: A DallEAgent instance.
+        """
+        with open(filepath, 'r') as f:
+            json_str = f.read()
+        return cls.deserialize(json_str)
