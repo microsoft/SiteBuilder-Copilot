@@ -22,28 +22,49 @@ class AgentFactory:
         self.last_usage[session_id] = current_time
 
         if session_id not in self.session_agents:
-            orchestrator_agent = AzureOpenAIAgent(
-                api_key=self.api_key,
-                api_version=self.api_version,
-                base_url=self.base_url,
-                model=self.model,
-                system_message="You are an AI orchestrator for a website generator. Please provide a responses user inputs."
-            )
+            session_dir = self.get_session_directory(session_id)
+            agents_dir = os.path.join(session_dir, 'agents')
+            orchestrator_agent = None
+            template_agent = None
+            image_gen_agent = None
 
-            template_agent = AzureOpenAIAgent(
-                api_key=self.api_key,
-                api_version=self.api_version,
-                base_url=self.base_url,
-                model=self.model,
-                system_message="You are an HTML generating agent for a website generator. Please provide html/css/javascript based on the user input."
-            )
+            if os.path.exists(agents_dir):
+                orchestrator_path = os.path.join(agents_dir, 'orchestrator_agent.json')
+                template_path = os.path.join(agents_dir, 'template_agent.json')
+                image_gen_path = os.path.join(agents_dir, 'image_gen_agent.json')
 
-            image_gen_agent = DallEAgent(
-                api_key=self.image_api_key,
-                api_version=self.api_version,
-                base_url=self.image_resource_url,
-                model="dall-e-3"
-            )
+                if os.path.exists(orchestrator_path):
+                    orchestrator_agent = AzureOpenAIAgent.load(orchestrator_path)
+                if os.path.exists(template_path):
+                    template_agent = AzureOpenAIAgent.load(template_path)
+                if os.path.exists(image_gen_path):
+                    image_gen_agent = DallEAgent.load(image_gen_path)
+
+            if not orchestrator_agent:
+                orchestrator_agent = AzureOpenAIAgent(
+                    api_key=self.api_key,
+                    api_version=self.api_version,
+                    base_url=self.base_url,
+                    model=self.model,
+                    system_message="You are an AI orchestrator for a website generator. Please provide responses to user inputs."
+                )
+
+            if not template_agent:
+                template_agent = AzureOpenAIAgent(
+                    api_key=self.api_key,
+                    api_version=self.api_version,
+                    base_url=self.base_url,
+                    model=self.model,
+                    system_message="You are an HTML generating agent for a website generator. Please provide html/css/javascript based on the user input."
+                )
+
+            if not image_gen_agent:
+                image_gen_agent = DallEAgent(
+                    api_key=self.image_api_key,
+                    api_version=self.api_version,
+                    base_url=self.image_resource_url,
+                    model="dall-e-3"
+                )
 
             self.session_agents[session_id] = {
                 "orchestrator_agent": orchestrator_agent,
@@ -52,6 +73,11 @@ class AgentFactory:
             }
 
         return self.session_agents[session_id]
+
+    @staticmethod
+    def get_session_directory(session_id):
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(current_dir, 'jobs', session_id)
 
     def cleanup_inactive_sessions(self):
         current_time = time.time()

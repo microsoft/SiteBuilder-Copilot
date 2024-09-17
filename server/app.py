@@ -5,9 +5,8 @@ import os
 from agent_factory import AgentFactory
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
-# Initialize the AgentFactory
 agent_factory = AgentFactory()
 
 @app.route('/sendprompt/<sessionId>', methods=['POST'])
@@ -19,13 +18,7 @@ def send_prompt(sessionId):
     file = request.files.get('file')
     file_content = None
 
-    # Ensure the jobs directory exists
-    jobs_dir = os.path.join('jobs')
-    if not os.path.exists(jobs_dir):
-        os.makedirs(jobs_dir)
-
-    # Ensure the session directory exists
-    session_dir = os.path.join(jobs_dir, sessionId)
+    session_dir = get_session_directory(sessionId)
     if not os.path.exists(session_dir):
         os.makedirs(session_dir)
 
@@ -59,6 +52,9 @@ def send_prompt(sessionId):
         template_filename = saveTemplate(html_response, sessionId)
         template_url = url_for('serve_html_template', session_id=sessionId, filename=template_filename, _external=True)
 
+        orchestrator_agent.save(os.path.join(session_dir, 'agents', 'orchestrator_agent.json'))
+        template_agent.save(os.path.join(session_dir, 'agents', 'template_agent.json'))
+
         return jsonify({
             "plaintextdata": plaintext_response,
             "htmldata": html_response,
@@ -70,8 +66,7 @@ def send_prompt(sessionId):
     
 @app.route("/jobs/<session_id>/<filename>", methods=["GET"])
 def serve_html_template(session_id, filename):
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    asset_dir = os.path.join(current_dir, 'jobs', session_id, 'template')
+    asset_dir = os.path.join(get_session_directory(session_id), 'template')
     asset_path = os.path.join(asset_dir, filename)
     
     if not os.path.exists(asset_path):
@@ -143,8 +138,7 @@ def new_chat(sessionId):
         return jsonify({'error': str(e)}), 500        
 
 def saveAttachment(file, session_id):
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    upload_dir = os.path.join(current_dir, 'jobs', session_id, 'uploads')
+    upload_dir = os.path.join(get_session_directory(session_id), 'uploads')
     os.makedirs(upload_dir, exist_ok=True)
     file_path = os.path.join(upload_dir, file.filename)
     file.save(file_path)
@@ -165,8 +159,7 @@ def saveTemplate(html_content, session_id):
     Returns:
     str: The filename of the saved index.html file.
     """
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    template_dir = os.path.join(current_dir, 'jobs', session_id, 'template')
+    template_dir = os.path.join(get_session_directory(session_id), 'template')
     os.makedirs(template_dir, exist_ok=True)
     file_path = os.path.join(template_dir, 'index.html')
     
@@ -198,6 +191,10 @@ def extract_html(response):
     start_index += len(start_marker)
     
     return response[start_index:end_index].strip()
+
+def get_session_directory(session_id):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(current_dir, 'jobs', session_id)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,7 +1,6 @@
 from openai import AzureOpenAI
-import requests
-import base64
 import json
+import os
 
 class DallEAgent:
     def __init__(self, api_key: str, api_version: str, base_url: str, model: str = "gpt-4o", messages: list = None):
@@ -87,9 +86,11 @@ class DallEAgent:
     def save(self, filepath: str):
         """
         Saves the serialized state of the agent to a file.
-
+        
         :param filepath: The path to the file where the state should be saved.
         """
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        
         with open(filepath, 'w') as f:
             f.write(self.serialize())
 

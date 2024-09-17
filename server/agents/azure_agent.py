@@ -1,4 +1,5 @@
 import json
+import os
 from openai import AzureOpenAI
 
 class AzureOpenAIAgent:
@@ -94,6 +95,8 @@ class AzureOpenAIAgent:
         
         :param filepath: The path to the file where the state should be saved.
         """
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        
         with open(filepath, 'w') as f:
             f.write(self.serialize())
 
