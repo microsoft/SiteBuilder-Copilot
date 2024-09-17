@@ -53,10 +53,6 @@ function App() {
     fetchSessionHistory();
   }, []);
 
-  useEffect(() => {
-    // TODO: display session history in UI, make it interactive
-    console.log('Session history:', sessionHistory);
-  }, [sessionHistory]);
 
   const fetchSessionHistory = async () => {
     try {
@@ -190,6 +186,15 @@ function App() {
     }
   };
 
+  const handleSessionSelectCallback = async (selectedSessionId: string) => {
+    const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${selectedSessionId}`;
+    window.history.replaceState({ path: newUrl }, '', newUrl);
+    setSessionId(selectedSessionId);
+    setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${selectedSessionId}/index.html`);
+
+    // TODO: populate chat history
+  };
+
   const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
@@ -235,7 +240,12 @@ function App() {
         </TabList>
       </div>
       <div className="right-column">
-        <ConversationPanel conversations={conversations} handleNewChat={handleNewChat} sessionHistory={sessionHistory} />
+        <ConversationPanel
+          conversations={conversations}
+          sessionHistory={sessionHistory}
+          handleNewChat={handleNewChat}
+          handleSessionSelectCallback={handleSessionSelectCallback}
+        />
         <textarea
           className="scrollable-input"
           placeholder="Type your prompt here!"

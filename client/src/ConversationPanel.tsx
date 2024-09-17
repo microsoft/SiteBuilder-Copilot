@@ -10,13 +10,21 @@ interface ConversationPanelProps {
   conversations: Conversation[];
   sessionHistory: string[];
   handleNewChat: () => Promise<void>;
+  handleSessionSelectCallback: (sessionId: string) => void;
 }
 
 const ConversationPanel: React.FC<ConversationPanelProps> = ({
   conversations,
   sessionHistory,
   handleNewChat,
+  handleSessionSelectCallback,
 }) => {
+
+  const handleSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const sessionId = event.target.value;
+    handleSessionSelectCallback(sessionId);
+  }
+
   return (
     <div id="conversation" className="conversations">
       <div id="conversation-header" className="conversation-header">
@@ -29,7 +37,7 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
           </button>
         </div>
         {sessionHistory &&
-          <select id="session-history" defaultValue={"DEFAULT"}>
+          <select id="session-history" defaultValue={"DEFAULT"} onChange={handleSelect}>
             <option value="DEFAULT" disabled>Select a previous chat</option>
             {sessionHistory.map((sessionId,) => (
               <option key={sessionId} value={sessionId}>{sessionId}</option>
@@ -38,15 +46,16 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
         }
       </div>
       <br />
-      {conversations.map((conversation, index) => (
-        <div key={index} className="conversation">
-          <div className="submitted-prompt">{conversation.prompt}</div>
-          <div
-            className="ai-response"
-            dangerouslySetInnerHTML={{ __html: conversation.response }}
-          />
-        </div>
-      ))}
+      {conversations && 
+        conversations.map((conversation, index) => (
+          <div key={index} className="conversation">
+            <div className="submitted-prompt">{conversation.prompt}</div>
+            <div
+              className="ai-response"
+              dangerouslySetInnerHTML={{ __html: conversation.response }}
+            />
+          </div>
+        ))}
     </div>
   );
 };
