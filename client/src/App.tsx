@@ -60,6 +60,21 @@ function App() {
     }
   };
 
+  const fetchData = async (baseUrl: string, endpoint: string, method: string, body: FormData) => {
+    const response = await fetch(`${baseUrl}/${endpoint}`, {
+      method: method,
+      body: body,
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+
+    return data;
+  }
+
   const handleSend = async () => {
     if (prompt.trim()) {
       // Immediately update the conversations with a placeholder response
@@ -68,24 +83,20 @@ function App() {
       setPrompt('');
 
       try {
-        const formData = new FormData();
-        formData.append('prompt', prompt);
+        const copilotFormData = new FormData();
+        copilotFormData.append('prompt', prompt);
         if (selectedFile) {
-          formData.append('file', selectedFile);
+          copilotFormData.append('file', selectedFile);
         }
 
-        const response = await fetch(`http://127.0.0.1:5000/sendprompt/${sessionId}`, {
-          method: 'POST',
-          body: formData,
-        });
+        const copilotData = await fetchData("http://127.0.0.1:5000", `/sendprompt/${sessionId}`, 'POST', copilotFormData);
+        const aiResponse = copilotData.plaintextdata;
+        const htmlData = copilotData.htmldata;
 
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
+        const imageFormData = new FormData();
+        imageFormData.append('prompt', prompt);
 
-        const data = await response.json();
-        const aiResponse = data.plaintextdata;
-        const templateUrl = data.templateurl;
+        const imageData = await fetchData("http://127.0.0.1:5000", `/getimage/${sessionId}`, 'POST', imageFormData);
 
         // Update the conversations with the actual AI response
         setConversations((prevConversations) =>

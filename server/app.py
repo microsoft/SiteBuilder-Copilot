@@ -3,6 +3,7 @@ from mimetypes import guess_type
 from flask_cors import CORS
 import os
 from agent_factory import AgentFactory
+import requests
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -79,47 +80,35 @@ def serve_html_template(session_id, filename):
 
     return send_from_directory(asset_dir, filename, as_attachment=False, mimetype=guess_type(filename)[0])
 
-@app.route('/getbase64image', methods=['POST'])
-def get_base64_image():
+@app.route('/getimage/<session_id>', methods=['POST'])
+def get_image(session_id):
+    if 'prompt' not in request.form:
+        return jsonify({"error": "No prompt provided"}), 400
+
+    raw_image_prompt = request.form['prompt']
+    
     try:
-        data = request.get_json()
-        image_prompt = data.get('image_prompt')
-        if not image_prompt:
-            return jsonify({'error': 'No prompt provided'}), 400
+        image_prompt = f"""Please generate an image that encapsulates the vibe of the following prompt:
 
-        session_id = data.get('session_id')
-        if not session_id:
-            return jsonify({'error': 'No session ID provided'}), 400
-
+        {raw_image_prompt}
+        """
         agents = agent_factory.get_or_create_agents(session_id)
         image_gen_agent = agents["image_gen_agent"]
-  
-        # Get the base64 encoded image from the LLM client
-        image_response = image_gen_agent.get_base64_image(image_prompt)
-        image_base64 = f"data:image/png;base64,{image_response}"
 
-        return jsonify({'image': image_base64}), 200
-    except Exception as e:
-        print(e)
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/getimage', methods=['POST'])
-def get_image():
-    try:
-        data = request.get_json()
-        image_prompt = data.get('image_prompt')
-        if not image_prompt:
-            return jsonify({'error': 'No prompt provided'}), 400
-
-        session_id = data.get('session_id')
-        if not session_id:
-            return jsonify({'error': 'No session ID provided'}), 400
-
-        agents = agent_factory.get_or_create_agents(session_id)
-        image_gen_agent = agents["image_gen_agent"]
-  
         # Get the image URL from the LLM client
         image_url = image_gen_agent.generate_image(image_prompt)
+
+        # Download the image
+        try:
+            response = requests.get(image_url)
+            response.raise_for_status()  # Check if the request was successful
+            image_dir = getSessionFilePath(session_id, 'images')
+            file_path = os.path.join(image_dir, "background.png")
+            with open(file_path, "wb") as file:
+                file.write(response.content)
+            print("Image saved as background.png")
+        except Exception as e:
+            print(f"An error occurred while downloading the image: {e}")
 
         return jsonify({'image': image_url}), 200
     except Exception as e:
@@ -142,10 +131,14 @@ def new_chat(sessionId):
         print(e)
         return jsonify({'error': str(e)}), 500        
 
-def saveAttachment(file, session_id):
+def getSessionFilePath(session_id, subdirectory):
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    upload_dir = os.path.join(current_dir, 'jobs', session_id, 'uploads')
-    os.makedirs(upload_dir, exist_ok=True)
+    session_dir = os.path.join(current_dir, 'jobs', session_id, subdirectory)
+    os.makedirs(session_dir, exist_ok=True)
+    return session_dir
+
+def saveAttachment(file, session_id):
+    upload_dir = getSessionFilePath(session_id, 'uploads')
     file_path = os.path.join(upload_dir, file.filename)
     file.save(file_path)
     

@@ -3,7 +3,7 @@ import requests
 import base64
 
 class DallEAgent:
-    def __init__(self, api_key: str, api_version: str, base_url:str, model: str = "gpt-4o", system_message: str = None):
+    def __init__(self, api_key: str, api_version: str, base_url:str, model: str = "dall-e-3"):
         """
         Initialize the ImageGenerationAgent with the necessary API key.
 
@@ -13,7 +13,7 @@ class DallEAgent:
         print("Initializing ImageGenerationAgent...")
         self.client = AzureOpenAI(
             api_key=api_key,
-            api_version="2024-02-01",
+            api_version=api_version,
             azure_endpoint=base_url
         )
         print("Initialization complete.")
