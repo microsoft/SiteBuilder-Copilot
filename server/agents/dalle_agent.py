@@ -3,7 +3,7 @@ import json
 import os
 
 class DallEAgent:
-    def __init__(self, api_key: str, api_version: str, base_url: str, model: str = "gpt-4o", messages: list = None):
+    def __init__(self, api_key: str, api_version: str, base_url:str, model: str = "dall-e-3", messages: list = None):
         """
         Initialize the ImageGenerationAgent with the necessary API key.
 

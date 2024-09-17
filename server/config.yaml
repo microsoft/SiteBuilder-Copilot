@@ -1,3 +1,6 @@
 AZURE_OPENAI_MODEL: "EnvironmentVariables"
 AZURE_OPENAI_API_KEY: "EnvironmentVariables"
 AZURE_OPENAI_ENDPOINT: "EnvironmentVariables"
+AZURE_OPENAI_DALLE_KEY: "EnvironmentVariables"
+AZURE_OPENAI_DALLE_ENDPOINT: "EnvironmentVariables"
+AZURE_OPENAI_DALLE_MODEL: "EnvironmentVariables"

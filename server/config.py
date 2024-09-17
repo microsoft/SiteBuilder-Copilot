@@ -20,6 +20,9 @@ class Config:
     AZURE_OPENAI_MODEL: str
     AZURE_OPENAI_API_KEY: str
     AZURE_OPENAI_ENDPOINT: str
+    AZURE_OPENAI_DALLE_KEY: str
+    AZURE_OPENAI_DALLE_ENDPOINT: str
+    AZURE_OPENAI_DALLE_MODEL: str
     
 def get_secret(name):
     return os.getenv(name)

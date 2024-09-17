@@ -11,8 +11,9 @@ class AgentFactory:
         self.base_url = config.AZURE_OPENAI_ENDPOINT
         self.model = config.AZURE_OPENAI_MODEL
         self.api_version = "2024-02-01"
-        self.image_resource_url = os.getenv("AZURE_OPENAI_DALLE_ENDPOINT")
-        self.image_api_key = os.getenv("AZURE_OPENAI_DALLE_KEY")
+        self.image_base_url = config.AZURE_OPENAI_DALLE_ENDPOINT
+        self.image_api_key = config.AZURE_OPENAI_DALLE_KEY
+        self.image_model = config.AZURE_OPENAI_DALLE_MODEL
         self.cleanup_interval = 60  # Check for inactive sessions every 60 seconds
         self.inactivity_threshold = 20 * 60  # 20 minutes
 
@@ -60,11 +61,12 @@ class AgentFactory:
 
             if not image_gen_agent:
                 image_gen_agent = DallEAgent(
-                    api_key=self.image_api_key,
-                    api_version=self.api_version,
-                    base_url=self.image_resource_url,
-                    model="dall-e-3"
+                api_key=self.image_api_key,
+                api_version=self.api_version,
+                base_url=self.image_base_url,
+                model=self.image_model
                 )
+            
 
             self.session_agents[session_id] = {
                 "orchestrator_agent": orchestrator_agent,

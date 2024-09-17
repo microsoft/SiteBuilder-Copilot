@@ -32,7 +32,6 @@ function App() {
       const response = await fetch(`http://127.0.0.1:5000/jobs/${guid}/index.html`);
       if (response.status === 200) {
         setIframeUrl(`http://127.0.0.1:5000/jobs/${guid}/index.html`);
-        setSessionId(guid);
       } else {
         guid = generateGUID();
         const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
@@ -61,10 +60,19 @@ function App() {
     }
   };
 
-  const reloadIframe = () => {
-    const iframe = document.getElementById('generated-content-iframe') as HTMLIFrameElement;
-    // eslint-disable-next-line no-self-assign
-    iframe.src = iframe.src;
+  const fetchData = async (baseUrl: string, endpoint: string, method: string, body: FormData) => {
+    const response = await fetch(`${baseUrl}/${endpoint}`, {
+      method: method,
+      body: body,
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+
+    return data;
   }
 
   const handleSend = async () => {
@@ -75,24 +83,20 @@ function App() {
       setPrompt('');
 
       try {
-        const formData = new FormData();
-        formData.append('prompt', prompt);
+        const copilotFormData = new FormData();
+        copilotFormData.append('prompt', prompt);
         if (selectedFile) {
-          formData.append('file', selectedFile);
+          copilotFormData.append('file', selectedFile);
         }
 
-        const response = await fetch(`http://127.0.0.1:5000/sendprompt/${sessionId}`, {
-          method: 'POST',
-          body: formData,
-        });
+        const copilotData = await fetchData("http://127.0.0.1:5000", `/sendprompt/${sessionId}`, 'POST', copilotFormData);
+        const aiResponse = copilotData.plaintextdata;
+        const htmlData = copilotData.htmldata;
 
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
+        const imageFormData = new FormData();
+        imageFormData.append('prompt', prompt);
 
-        const data = await response.json();
-        const aiResponse = data.plaintextdata;
-        const templateUrl = data.templateurl;
+        const imageData = await fetchData("http://127.0.0.1:5000", `/getimage/${sessionId}`, 'POST', imageFormData);
 
         // Update the conversations with the actual AI response
         setConversations((prevConversations) =>
@@ -114,7 +118,6 @@ function App() {
           setHtmlSource(data.htmldata);
         }
         setResponse(JSON.stringify(data));
-        reloadIframe();
 
         const placeholderBanner = document.getElementById('placeholder-banner');
         if (placeholderBanner) {
