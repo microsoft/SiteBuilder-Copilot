@@ -26,18 +26,29 @@ function App() {
   const [htmlSource, setHtmlSource] = useState<string>('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
   const [response, setResponse] = useState<string>('{}');
   const [iframeUrl, setIframeUrl] = useState<string>('');
-
+  
   useEffect(() => {
-    // Get sessionId from URL or generate a new one
+    const checkAndSetIframeUrl = async (guid: string) => {
+      const response = await fetch(`http://127.0.0.1:5000/jobs/${guid}/index.html`);
+      if (response.status === 200) {
+        setIframeUrl(`http://127.0.0.1:5000/jobs/${guid}/index.html`);
+      } else {
+        guid = generateGUID();
+        const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
+        window.history.replaceState({ path: newUrl }, '', newUrl);
+        setSessionId(guid);
+      }
+    };
+  
     let guid = getQueryParam('sessionId');
     if (guid) {
-      setIframeUrl(`http://127.0.0.1:5000/jobs/${guid}/index.html`);
+      checkAndSetIframeUrl(guid);
     } else {
       guid = generateGUID();
       const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
       window.history.replaceState({ path: newUrl }, '', newUrl);
+      setSessionId(guid);
     }
-    setSessionId(guid);
   }, []);
 
   const scrollToLastElement = (elementId: string) => {
