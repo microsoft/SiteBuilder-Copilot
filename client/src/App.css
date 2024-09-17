@@ -157,3 +157,90 @@ html, body {
   width: 100%;
   border: none;
 }
+
+.loading-spinner {
+  position: fixed; /* Use fixed to ensure it stays in the center of the viewport */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.5); /* Optional: to mask the iframe */
+  padding: 10px;
+  border-radius: 5px;
+}
+
+@media (prefers-color-scheme: dark) {
+  html, body {
+    background-color: #1e1e1e;
+  }
+
+  .container {
+    background-color: #1e1e1e;
+  }
+
+  .left-column {
+    background-color: #2a2a2a;
+    color: #dcdcdc;
+  }
+
+  .right-column {
+    background-color: #333333;
+    border-left: 1px solid #555;
+    color: #f0f0f0;
+  }
+
+  .conversations {
+    background-color: #2a2a2a;
+  }
+
+  .conversation {
+    color: #dcdcdc;
+  }
+
+  .submitted-prompt, .ai-response {
+    background-color: #2f2f2f;
+    border: 1px solid #555;
+    color: #f0f0f0;
+  }
+
+  .left-column .generated-recipe {
+    color: #dcdcdc;
+  }
+
+  .scrollable-input {
+    background-color: #3a3a3a;
+    color: #f0f0f0;
+    border: none;
+  }
+
+  .send-button {
+    background-color: #1e90ff;
+    color: white;
+  }
+
+  .send-button .send-icon {
+    color: white;
+  }
+
+  .file-input-label {
+    background-color: #444444;
+    color: #f0f0f0;
+  }
+
+  .file-input-label:hover {
+    background-color: #555555;
+  }
+
+  .tab-list {
+    border-bottom: 2px solid #444;
+    color: #ccc;
+  }
+
+  .loading-spinner {
+    background: rgba(0, 0, 0, 0.5);
+  }
+}
