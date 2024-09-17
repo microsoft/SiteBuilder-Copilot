@@ -3,6 +3,8 @@ import ConversationPanel from './ConversationPanel';
 import { TabItem, TabList } from './components/TabComponents';
 import './App.css';
 
+const LOCAL_SERVER_BASE_URL = 'http://127.0.0.1:5000/';
+
 // Function to generate a GUID
 const generateGUID = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -26,12 +28,13 @@ function App() {
   const [htmlSource, setHtmlSource] = useState<string>('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
   const [response, setResponse] = useState<string>('{}');
   const [iframeUrl, setIframeUrl] = useState<string>('');
+  const [sessionHistory, setSessionHistory] = useState<string[]>([]);
   
   useEffect(() => {
     const checkAndSetIframeUrl = async (guid: string) => {
-      const response = await fetch(`http://127.0.0.1:5000/jobs/${guid}/index.html`);
+      const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
       if (response.status === 200) {
-        setIframeUrl(`http://127.0.0.1:5000/jobs/${guid}/index.html`);
+        setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
       } else {
         guid = generateGUID();
         const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
@@ -49,6 +52,21 @@ function App() {
       window.history.replaceState({ path: newUrl }, '', newUrl);
       setSessionId(guid);
     }
+  }, []);
+
+  useEffect(() => {
+    const fetchSessionHistory = async () => {
+      try {
+        const response = await fetch(LOCAL_SERVER_BASE_URL + `sessionhistory`);
+        const data = await response.json();
+        setSessionHistory(data);
+        // TODO: display session history in UI, make it interactive
+        console.log('session history: ', sessionHistory);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+    fetchSessionHistory();
   }, []);
 
   const scrollToLastElement = (elementId: string) => {
@@ -96,7 +114,7 @@ function App() {
           formData.append('file', selectedFile);
         }
 
-        const response = await fetch(`http://127.0.0.1:5000/sendprompt/${sessionId}`, {
+        const response = await fetch(LOCAL_SERVER_BASE_URL + `sendprompt/${sessionId}`, {
           method: 'POST',
           body: formData,
         });
@@ -143,7 +161,7 @@ function App() {
   
   const handleNewChat = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/newchat/${sessionId}`, {
+      const response = await fetch(LOCAL_SERVER_BASE_URL + `newchat/${sessionId}`, {
         method: 'POST',
       });
 
