@@ -113,6 +113,18 @@ def get_image():
         print(e)
         return jsonify({'error': str(e)}), 500
     
+@app.route('/newchat', methods=['POST'])
+def new_chat():
+    try:
+        # Initialize a new chat session
+        orchestrator_agent.reset()
+        template_agent.reset()
+
+        return jsonify({'message': 'New chat session initialized'}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({'error': str(e)}), 500    
+    
 def generate_image_prompt(image_prompt):
     image_response = orchestrator_agent.send_prompt(image_prompt)
     return image_response

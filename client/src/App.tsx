@@ -68,6 +68,27 @@ function App() {
       }
     }
   };
+  
+  const handleNewChat = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/newchat', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Reset the state for a new chat session
+      setPrompt('');
+      setConversations([]);
+      setSelectedFile(null);
+      setHtmlSource('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
+      setResponse('{}');
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -98,7 +119,7 @@ function App() {
         </TabList>      
       </div>
       <div className="right-column">
-        <ConversationPanel conversations={conversations} />
+        <ConversationPanel conversations={conversations} handleNewChat={handleNewChat} />
         <textarea
           className="scrollable-input"
           placeholder="Type your prompt here!"

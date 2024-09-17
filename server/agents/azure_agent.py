@@ -80,3 +80,11 @@ class AzureOpenAIAgent:
         
         print("Image URL: {0}".format(image_url))
         return image_url
+    
+    def reset(self):
+        """
+        Resets the conversation history, effectively creating a new chat.
+        """
+        self.messages = []
+        if hasattr(self, 'system_message') and self.system_message:
+            self.messages.append({"role": "system", "content": self.system_message})    
