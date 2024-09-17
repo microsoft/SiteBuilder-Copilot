@@ -4,6 +4,7 @@ from flask_cors import CORS
 import os
 from agent_factory import AgentFactory
 import requests
+import re
 
 app = Flask(__name__)
 CORS(app)
@@ -31,24 +32,11 @@ def send_prompt(sessionId):
         if file:
             file_content = saveAttachment(file, sessionId)
                 
-        #TODO: Parallelize these prompts
-        orchestrator_prompt = f"""Please play the role of an AI orchestrator for a website generator and respond to some user input.
-        It should be no more than a paragraph or 200 characters long and only in plaintext.
-        
-        Here is the user input you need to provide a response for:
-        
-        {prompt}"""
-        
-        plaintext_response = orchestrator_agent.send_prompt(orchestrator_prompt, file_content)
+        #TODO: Parallelize these prompts   
+        plaintext_response = orchestrator_agent.send_prompt(prompt, file_content)
 
-        html_prompt = f"""Please generate a html/css/javacript template for a website based on the following prompt:
-        
-        {prompt}
-        
-        The HTML content should be wrapped with delimiters +START+ and +END+.
-        """
-        html_response = template_agent.send_prompt(html_prompt, file_content)
-        html_response = extract_html(html_response)
+        html_response = template_agent.send_prompt(prompt, file_content)
+        html_response = trim_markdown(html_response)
 
         template_filename = saveTemplate(html_response, sessionId)
         template_url = url_for('serve_html_template', session_id=sessionId, filename=template_filename, _external=True)
@@ -179,29 +167,15 @@ def saveTemplate(html_content, session_id):
     
     return 'index.html'
 
-def extract_html(response):
-    """
-    Extracts template content from the given response string.
-    
-    Args:
-    response (str): The response string containing template content between +START+ and +END+.
-    
-    Returns:
-    str: The extracted template content or an empty string if the markers are not found.
-    """
-    start_marker = "+START+"
-    end_marker = "+END+"
-    
-    start_index = response.find(start_marker)
-    end_index = response.find(end_marker)
-    
-    if (start_index == -1) or (end_index == -1):
-        return ""
-    
-    # Adjust indices to extract content between the markers
-    start_index += len(start_marker)
-    
-    return response[start_index:end_index].strip()
+# A helper function that trims out markdown surrounding html, ```html and ``` code blocks
+def trim_markdown(text):
+    # Remove leading and trailing whitespace
+    text = text.strip()
+    # Remove ```html from the beginning
+    text = re.sub(r'^```html', '', text)
+    # Remove ``` from the beginning and end
+    text = re.sub(r'^```|```$', '', text)
+    return text.strip()
 
 def get_session_directory(session_id):
     current_dir = os.path.dirname(os.path.abspath(__file__))
