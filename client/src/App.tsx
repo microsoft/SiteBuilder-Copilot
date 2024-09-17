@@ -77,6 +77,10 @@ function App() {
 
         if (templateUrl) {
           setIframeUrl(templateUrl);
+          const sourceCodeResponse = await fetch(templateUrl);
+          if (sourceCodeResponse.ok) {
+            setHtmlSource(await sourceCodeResponse.text());
+          }
         } else {
           setHtmlSource(data.htmldata);
         }
