@@ -126,9 +126,13 @@ def get_image():
         print(e)
         return jsonify({'error': str(e)}), 500
     
-@app.route('/newchat', methods=['POST'])
-def new_chat():
+@app.route('/newchat/<sessionId>', methods=['POST'])
+def new_chat(sessionId):
     try:
+        agents = agent_factory.get_or_create_agents(sessionId)
+        orchestrator_agent = agents["orchestrator_agent"]
+        template_agent = agents["template_agent"]        
+        
         # Initialize a new chat session
         orchestrator_agent.reset()
         template_agent.reset()
