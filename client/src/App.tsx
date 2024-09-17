@@ -4,8 +4,6 @@ import { TabItem, TabList } from './components/TabComponents';
 import './App.css';
 
 const LOCAL_SERVER_BASE_URL = 'http://127.0.0.1:5000/';
-
-// Function to generate a GUID
 const generateGUID = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = (Math.random() * 16) | 0,
@@ -14,7 +12,6 @@ const generateGUID = () => {
   });
 };
 
-// Function to get query parameter by name
 const getQueryParam = (name: string) => {
   const urlParams = new URLSearchParams(window.location.search);
   return urlParams.get(name);
@@ -102,7 +99,6 @@ function App() {
 
   const handleSend = async () => {
     if (prompt.trim()) {
-      // Immediately update the conversations with a placeholder response
       setConversations([...conversations, { prompt, response: 'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />' }]);
       scrollToLastElement('conversation');
       setPrompt('');
@@ -127,7 +123,6 @@ function App() {
         const aiResponse = data.plaintextdata;
         const templateUrl = data.templateurl;
 
-        // Update the conversations with the actual AI response
         setConversations((prevConversations) =>
           prevConversations.map((conv, index) =>
             index === prevConversations.length - 1
@@ -153,6 +148,8 @@ function App() {
         if (placeholderBanner) {
           placeholderBanner.remove();
         }
+
+        setSelectedFile(null);
       } catch (error) {
         console.error('Error:', error);
       }
@@ -227,25 +224,11 @@ function App() {
           </div>
         )}
         <div className="button-wrapper">
-          <button className="send-button" onClick={handleSend}>
-            <span className="send-icon">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M2.5 19.5L21 12 2.5 4.5v7l13 0-13 0v7z"
-                />
-              </svg>
-            </span>
-          </button>
+        <button className="send-button" onClick={handleSend}>
+          <span className="send-icon">
+            <i className="fas fa-paper-plane"></i>
+          </span>
+        </button>
           <div className="file-input-wrapper">
             <input
               type="file"
