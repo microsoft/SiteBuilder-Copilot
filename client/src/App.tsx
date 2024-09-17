@@ -32,6 +32,7 @@ function App() {
       const response = await fetch(`http://127.0.0.1:5000/jobs/${guid}/index.html`);
       if (response.status === 200) {
         setIframeUrl(`http://127.0.0.1:5000/jobs/${guid}/index.html`);
+        setSessionId(guid);
       } else {
         guid = generateGUID();
         const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
@@ -59,6 +60,12 @@ function App() {
       }, 100);
     }
   };
+
+  const reloadIframe = () => {
+    const iframe = document.getElementById('generated-content-iframe') as HTMLIFrameElement;
+    // eslint-disable-next-line no-self-assign
+    iframe.src = iframe.src;
+  }
 
   const handleSend = async () => {
     if (prompt.trim()) {
@@ -107,6 +114,7 @@ function App() {
           setHtmlSource(data.htmldata);
         }
         setResponse(JSON.stringify(data));
+        reloadIframe();
 
         const placeholderBanner = document.getElementById('placeholder-banner');
         if (placeholderBanner) {

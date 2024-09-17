@@ -17,6 +17,7 @@ class AzureOpenAIAgent:
         self.api_version = api_version
         self.model = model
         self.messages = messages if messages is not None else []
+        self.base_url = base_url
 
         self.client = AzureOpenAI(
             api_key=api_key,
@@ -69,7 +70,8 @@ class AzureOpenAIAgent:
             "api_key": self.api_key,
             "api_version": self.api_version,
             "model": self.model,
-            "messages": self.messages
+            "messages": self.messages,
+            "base_url": self.base_url
         })
 
     @classmethod
@@ -84,9 +86,9 @@ class AzureOpenAIAgent:
         return cls(
             api_key=data["api_key"],
             api_version=data["api_version"],
-            base_url=data["base_url"],
             model=data["model"],
-            messages=data["messages"]
+            messages=data["messages"],
+            base_url=data["base_url"]
         )
 
     def save(self, filepath: str):
@@ -111,3 +113,11 @@ class AzureOpenAIAgent:
         with open(filepath, 'r') as f:
             json_str = f.read()
         return cls.deserialize(json_str)
+    
+    def get_messages(self) -> list:
+        """
+        Returns the list of messages in the conversation history.
+        
+        :return: A list of messages.
+        """
+        return self.messages

@@ -120,6 +120,18 @@ def get_image():
     except Exception as e:
         print(e)
         return jsonify({'error': str(e)}), 500
+
+@app.route('/messages/<sessionId>', methods=['POST'])
+def get_messages(sessionId):
+    try:
+        agents = agent_factory.get_or_create_agents(sessionId)
+        orchestrator_agent = agents["orchestrator_agent"]
+        
+        return jsonify({'messages': orchestrator_agent.get_messages()}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({'error': str(e)}), 500        
+
     
 @app.route('/newchat/<sessionId>', methods=['POST'])
 def new_chat(sessionId):
