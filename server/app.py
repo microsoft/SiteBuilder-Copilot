@@ -126,6 +126,22 @@ def get_image():
         print(e)
         return jsonify({'error': str(e)}), 500
     
+@app.route('/newchat/<sessionId>', methods=['POST'])
+def new_chat(sessionId):
+    try:
+        agents = agent_factory.get_or_create_agents(sessionId)
+        orchestrator_agent = agents["orchestrator_agent"]
+        template_agent = agents["template_agent"]        
+        
+        # Initialize a new chat session
+        orchestrator_agent.reset()
+        template_agent.reset()
+
+        return jsonify({'message': 'New chat session initialized'}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({'error': str(e)}), 500        
+
 def saveAttachment(file, session_id):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     upload_dir = os.path.join(current_dir, 'jobs', session_id, 'uploads')
