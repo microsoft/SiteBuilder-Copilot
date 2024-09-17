@@ -39,7 +39,6 @@ function App() {
         setSessionId(guid);
       }
     };
-  
     let guid = getQueryParam('sessionId');
     if (guid) {
       checkAndSetIframeUrl(guid);
@@ -65,6 +64,18 @@ function App() {
     }
     fetchSessionHistory();
   }, []);
+
+  useEffect(() => {
+    async function doFetchSource(url : string) {
+      const sourceCodeResponse = await fetch(url);
+      if (sourceCodeResponse.ok) {
+        setHtmlSource(await sourceCodeResponse.text());
+      }
+    }
+    if (iframeUrl) {
+      doFetchSource(iframeUrl);
+    }
+  }, [iframeUrl])
 
   const scrollToLastElement = (elementId: string) => {
     const element = document.getElementById(elementId);
@@ -134,10 +145,6 @@ function App() {
 
         if (templateUrl) {
           setIframeUrl(templateUrl);
-          const sourceCodeResponse = await fetch(templateUrl);
-          if (sourceCodeResponse.ok) {
-            setHtmlSource(await sourceCodeResponse.text());
-          }
         } else {
           setHtmlSource(data.htmldata);
         }
