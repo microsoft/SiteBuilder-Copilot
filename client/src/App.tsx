@@ -48,22 +48,24 @@ function App() {
       window.history.replaceState({ path: newUrl }, '', newUrl);
       setSessionId(guid);
     }
+
+    fetchSessionHistory();
   }, []);
 
   useEffect(() => {
-    const fetchSessionHistory = async () => {
-      try {
-        const response = await fetch(LOCAL_SERVER_BASE_URL + `sessionhistory`);
-        const data = await response.json();
-        setSessionHistory(data);
-        // TODO: display session history in UI, make it interactive
-        console.log('session history: ', sessionHistory);
-      } catch (error) {
-        console.error('Error:', error);
-      }
+    // TODO: display session history in UI, make it interactive
+    console.log('Session history:', sessionHistory);
+  }, [sessionHistory]);
+
+  const fetchSessionHistory = async () => {
+    try {
+      const response = await fetch(LOCAL_SERVER_BASE_URL + `sessionhistory`);
+      const data = await response.json();
+      setSessionHistory(data);
+    } catch (error) {
+      console.error('Error:', error);
     }
-    fetchSessionHistory();
-  }, []);
+  }
 
   useEffect(() => {
     async function doFetchSource(url : string) {
@@ -217,7 +219,7 @@ function App() {
         </TabList>      
       </div>
       <div className="right-column">
-        <ConversationPanel conversations={conversations} handleNewChat={handleNewChat} />
+        <ConversationPanel conversations={conversations} handleNewChat={handleNewChat} sessionHistory={sessionHistory} />
         <textarea
           className="scrollable-input"
           placeholder="Type your prompt here!"

@@ -1,0 +1,24 @@
+select {
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    color: #333;
+    width: 100%;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+select:hover {
+    border-color: #646cff;
+}
+
+.conversation-header {
+    display: flex;
+}
+
+.new-chat-button-wrapper {
+    width: 200px;
+}
