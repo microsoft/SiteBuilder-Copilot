@@ -4,14 +4,15 @@ select {
     font-weight: 400;
     padding: 10px;
     border: 1px solid #ccc;
-    border-radius: 8px;
+    border-radius: 4px;
     background-color: #f9f9f9;
     color: #333;
     width: 100%;
     box-sizing: border-box;
     cursor: pointer;
 }
-select:hover {
+
+select:hover, #new-chat-button:hover {
     border-color: #646cff;
 }
 
@@ -19,6 +20,20 @@ select:hover {
     display: flex;
 }
 
-.new-chat-button-wrapper {
-    width: 200px;
+#new-chat-button {
+    width: 50px;
+    height: 50px;
+    margin: 5px;
+    border-radius: 4px;
+    padding: 8px;
+    border: 1px solid #ccc;
+}
+
+#new-chat-button-wrapper {
+    
+    height: 50px;
+}
+
+#session-history {
+    height: 50px
 }
