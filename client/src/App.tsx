@@ -1,14 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ConversationPanel from './ConversationPanel';
 import { TabItem, TabList } from './components/TabComponents';
 import './App.css';
+
+// Function to generate a GUID
+const generateGUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0,
+      v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
+// Function to get query parameter by name
+const getQueryParam = (name: string) => {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(name);
+};
 
 function App() {
   const [prompt, setPrompt] = useState('');
   const [conversations, setConversations] = useState<{ prompt: string, response: string }[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [sessionId, setSessionId] = useState<string>('');
   const [htmlSource, setHtmlSource] = useState<string>('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
   const [response, setResponse] = useState<string>('{}');
+  const [iframeUrl, setIframeUrl] = useState<string>('');
+
+  useEffect(() => {
+    // Get sessionId from URL or generate a new one
+    let guid = getQueryParam('sessionId');
+    if (guid) {
+      setIframeUrl(`http://127.0.0.1:5000/jobs/${guid}/index.html`);
+    } else {
+      guid = generateGUID();
+      const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
+      window.history.replaceState({ path: newUrl }, '', newUrl);
+    }
+    setSessionId(guid);
+  }, []);
 
   const scrollToLastElement = (elementId: string) => {
     const element = document.getElementById(elementId);
@@ -33,7 +63,7 @@ function App() {
           formData.append('file', selectedFile);
         }
 
-        const response = await fetch('http://127.0.0.1:5000/sendprompt', {
+        const response = await fetch(`http://127.0.0.1:5000/sendprompt/${sessionId}`, {
           method: 'POST',
           body: formData,
         });
@@ -44,7 +74,7 @@ function App() {
 
         const data = await response.json();
         const aiResponse = data.plaintextdata;
-        const htmlData = data.htmldata;
+        const templateUrl = data.templateurl;
 
         // Update the conversations with the actual AI response
         setConversations((prevConversations) =>
@@ -56,7 +86,15 @@ function App() {
         );
         scrollToLastElement('conversation');
 
-        setHtmlSource(htmlData);
+        if (templateUrl) {
+          setIframeUrl(templateUrl);
+          const sourceCodeResponse = await fetch(templateUrl);
+          if (sourceCodeResponse.ok) {
+            setHtmlSource(await sourceCodeResponse.text());
+          }
+        } else {
+          setHtmlSource(data.htmldata);
+        }
         setResponse(JSON.stringify(data));
 
         const placeholderBanner = document.getElementById('placeholder-banner');
@@ -108,7 +146,11 @@ function App() {
       <div className="left-column">
         <TabList activeTabIndex={0}>
           <TabItem name="Website">
-            <div id="generated-content" dangerouslySetInnerHTML={{__html: htmlSource}}/>
+            {iframeUrl ? (
+              <iframe id="generated-content-iframe" src={iframeUrl} />
+            ) : (
+              <div id="generated-content" dangerouslySetInnerHTML={{ __html: htmlSource }} />
+            )}
           </TabItem>
           <TabItem name="Source">
             <div id="source-code-content"><pre>{htmlSource}</pre></div>

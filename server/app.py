@@ -1,40 +1,17 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory, url_for
+from mimetypes import guess_type
 from flask_cors import CORS
 import os
-from agents import AzureOpenAIAgent
-from agents import DallEAgent
-from config import config
+from agent_factory import AgentFactory
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
-api_key = config.AZURE_OPENAI_API_KEY  # Ensure your API key is set in the environment variables
-base_url = config.AZURE_OPENAI_ENDPOINT
-model = config.AZURE_OPENAI_MODEL
-api_version = "2024-02-01"
 
-orchestrator_agent = AzureOpenAIAgent(
-    api_key=api_key,
-    api_version=api_version,
-    base_url=base_url,
-    model=model,
-    system_message="You are an AI orchestrator for a website generator. Please provide a responses user inputs."
-)
+# Initialize the AgentFactory
+agent_factory = AgentFactory()
 
-template_agent = AzureOpenAIAgent(
-    api_key=api_key,
-    api_version=api_version,
-    base_url=base_url,
-    model=model,
-    system_message="You are an HTML generating agent for a website generator. Please provide html/css/javascript based on the user input."
-)
-
-
-image_resource_url = os.getenv("AZURE_OPENAI_DALLE_ENDPOINT")
-image_api_key = os.getenv("AZURE_OPENAI_DALLE_KEY")
-image_gen_agent = DallEAgent(api_key=image_api_key, api_version=api_version, base_url=image_resource_url, model="dall-e-3")
-
-@app.route('/sendprompt', methods=['POST'])
-def send_prompt():
+@app.route('/sendprompt/<sessionId>', methods=['POST'])
+def send_prompt(sessionId):
     if 'prompt' not in request.form:
         return jsonify({"error": "No prompt provided"}), 400
 
@@ -42,16 +19,23 @@ def send_prompt():
     file = request.files.get('file')
     file_content = None
 
+    # Ensure the jobs directory exists
+    jobs_dir = os.path.join('jobs')
+    if not os.path.exists(jobs_dir):
+        os.makedirs(jobs_dir)
+
+    # Ensure the session directory exists
+    session_dir = os.path.join(jobs_dir, sessionId)
+    if not os.path.exists(session_dir):
+        os.makedirs(session_dir)
+
+    agents = agent_factory.get_or_create_agents(sessionId)
+    orchestrator_agent = agents["orchestrator_agent"]
+    template_agent = agents["template_agent"]
+
     try:
         if file:
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            upload_dir = os.path.join(current_dir, 'jobs')
-            os.makedirs(upload_dir, exist_ok=True)
-            file_path = os.path.join(upload_dir, file.filename)
-            file.save(file_path)
-            
-            with open(file_path, 'rb') as f:
-                file_content = f.read()
+            file_content = saveAttachment(file, sessionId)
                 
         #TODO: Parallelize these prompts
         orchestrator_prompt = f"""Please play the role of an AI orchestrator for a website generator and respond to some user input.
@@ -72,13 +56,28 @@ def send_prompt():
         html_response = template_agent.send_prompt(html_prompt, file_content)
         html_response = extract_html(html_response)
 
+        template_filename = saveTemplate(html_response, sessionId)
+        template_url = url_for('serve_html_template', session_id=sessionId, filename=template_filename, _external=True)
+
         return jsonify({
             "plaintextdata": plaintext_response,
             "htmldata": html_response,
+            "templateurl": template_url
         }), 200
     except Exception as e:
         print(e)
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/jobs/<session_id>/<filename>", methods=["GET"])
+def serve_html_template(session_id, filename):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    asset_dir = os.path.join(current_dir, 'jobs', session_id, 'template')
+    asset_path = os.path.join(asset_dir, filename)
+    
+    if not os.path.exists(asset_path):
+        return jsonify({"error": ""}), 404
+
+    return send_from_directory(asset_dir, filename, as_attachment=False, mimetype=guess_type(filename)[0])
 
 @app.route('/getbase64image', methods=['POST'])
 def get_base64_image():
@@ -87,6 +86,13 @@ def get_base64_image():
         image_prompt = data.get('image_prompt')
         if not image_prompt:
             return jsonify({'error': 'No prompt provided'}), 400
+
+        session_id = data.get('session_id')
+        if not session_id:
+            return jsonify({'error': 'No session ID provided'}), 400
+
+        agents = agent_factory.get_or_create_agents(session_id)
+        image_gen_agent = agents["image_gen_agent"]
   
         # Get the base64 encoded image from the LLM client
         image_response = image_gen_agent.get_base64_image(image_prompt)
@@ -104,6 +110,13 @@ def get_image():
         image_prompt = data.get('image_prompt')
         if not image_prompt:
             return jsonify({'error': 'No prompt provided'}), 400
+
+        session_id = data.get('session_id')
+        if not session_id:
+            return jsonify({'error': 'No session ID provided'}), 400
+
+        agents = agent_factory.get_or_create_agents(session_id)
+        image_gen_agent = agents["image_gen_agent"]
   
         # Get the image URL from the LLM client
         image_url = image_gen_agent.generate_image(image_prompt)
@@ -128,6 +141,39 @@ def new_chat():
 def generate_image_prompt(image_prompt):
     image_response = orchestrator_agent.send_prompt(image_prompt)
     return image_response
+
+def saveAttachment(file, session_id):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    upload_dir = os.path.join(current_dir, 'jobs', session_id, 'uploads')
+    os.makedirs(upload_dir, exist_ok=True)
+    file_path = os.path.join(upload_dir, file.filename)
+    file.save(file_path)
+    
+    with open(file_path, 'rb') as f:
+        file_content = f.read()
+    
+    return file_content
+
+def saveTemplate(html_content, session_id):
+    """
+    Saves the HTML content to an index.html file in the session's directory.
+    
+    Args:
+    html_content (str): The HTML content to save.
+    session_id (str): The session ID to determine the directory.
+    
+    Returns:
+    str: The filename of the saved index.html file.
+    """
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    template_dir = os.path.join(current_dir, 'jobs', session_id, 'template')
+    os.makedirs(template_dir, exist_ok=True)
+    file_path = os.path.join(template_dir, 'index.html')
+    
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+    
+    return 'index.html'
 
 def extract_html(response):
     """
