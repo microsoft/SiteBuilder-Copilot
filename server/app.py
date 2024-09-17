@@ -5,14 +5,19 @@ import os
 from agent_factory import AgentFactory
 import requests
 import re
+import asyncio
 
 app = Flask(__name__)
 CORS(app)
 
 agent_factory = AgentFactory()
 
+import asyncio
+from flask import Flask, request, jsonify, url_for
+import os
+
 @app.route('/sendprompt/<sessionId>', methods=['POST'])
-def send_prompt(sessionId):
+async def send_prompt(sessionId):
     if 'prompt' not in request.form:
         return jsonify({"error": "No prompt provided"}), 400
 
@@ -21,6 +26,7 @@ def send_prompt(sessionId):
     file_content = None
 
     session_dir = get_session_directory(sessionId)
+    deprecate_index_template(sessionId)
     if not os.path.exists(session_dir):
         os.makedirs(session_dir)
 
@@ -31,27 +37,56 @@ def send_prompt(sessionId):
     try:
         if file:
             file_content = saveAttachment(file, sessionId)
-                
-        #TODO: Parallelize these prompts   
+
         plaintext_response = orchestrator_agent.send_prompt(prompt, file_content)
-
-        html_response = template_agent.send_prompt(prompt, file_content)
-        html_response = trim_markdown(html_response)
-
-        template_filename = saveTemplate(html_response, sessionId)
-        template_url = url_for('serve_html_template', session_id=sessionId, filename=template_filename, _external=True)
-
+        asyncio.create_task(asyncio.to_thread(process_template, prompt, file_content, sessionId, template_agent))
         orchestrator_agent.save(os.path.join(session_dir, 'agents', 'orchestrator_agent.json'))
-        template_agent.save(os.path.join(session_dir, 'agents', 'template_agent.json'))
 
         return jsonify({
-            "plaintextdata": plaintext_response,
-            "htmldata": html_response,
-            "templateurl": template_url
+            "response": plaintext_response,
         }), 200
     except Exception as e:
         print(e)
         return jsonify({"error": str(e)}), 500
+
+def deprecate_index_template(sessionId):
+    template_dir = os.path.join(get_session_directory(sessionId), 'template')
+    os.makedirs(template_dir, exist_ok=True)
+    index_path = os.path.join(template_dir, 'index.html')
+    deprecated_path = os.path.join(template_dir, 'index.html.old')
+    
+    if os.path.exists(index_path):
+        if os.path.exists(deprecated_path):
+            os.remove(deprecated_path)
+        os.rename(index_path, deprecated_path)
+
+
+@app.route('/getoutput/<sessionId>', methods=['POST'])
+async def get_output(sessionId):
+    html_content = None
+    session_dir = get_session_directory(sessionId)
+    template_path = os.path.join(session_dir, 'template', 'index.html')
+
+    if os.path.exists(template_path):
+        with open(template_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        template_url = url_for('serve_html_template', session_id=sessionId, filename='index.html', _external=True)
+    else:
+        # If the template does not exist yet, return a not ready status
+        return jsonify({"status": "not ready"}), 200
+
+    return jsonify({
+            "status": "ready",
+            "htmldata": html_content,
+            "templateurl": template_url
+        }), 200
+    
+def process_template(prompt, file_content, sessionId, template_agent):
+    html_response = template_agent.send_prompt(prompt, file_content)
+    session_dir = get_session_directory(sessionId)
+    template_agent.save(os.path.join(session_dir, 'agents', 'template_agent.json'))
+    html_response = trim_markdown(html_response)
+    saveTemplate(html_response, sessionId)
     
 @app.route("/jobs/<session_id>/<filename>", methods=["GET"])
 def serve_html_template(session_id, filename):
