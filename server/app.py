@@ -140,11 +140,7 @@ def new_chat(sessionId):
         return jsonify({'message': 'New chat session initialized'}), 200
     except Exception as e:
         print(e)
-        return jsonify({'error': str(e)}), 500    
-    
-def generate_image_prompt(image_prompt):
-    image_response = orchestrator_agent.send_prompt(image_prompt)
-    return image_response
+        return jsonify({'error': str(e)}), 500        
 
 def saveAttachment(file, session_id):
     current_dir = os.path.dirname(os.path.abspath(__file__))
