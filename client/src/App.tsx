@@ -12,22 +12,33 @@ const generateGUID = () => {
   });
 };
 
+// Function to get query parameter by name
+const getQueryParam = (name: string) => {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(name);
+};
+
 function App() {
   const [prompt, setPrompt] = useState('');
   const [conversations, setConversations] = useState<{ prompt: string, response: string }[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
-
-  useEffect(() => {
-    // Generate a GUID and update the URL query string
-    const guid = generateGUID();
-    setSessionId(guid);
-    const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
-    window.history.replaceState({ path: newUrl }, '', newUrl);
-  }, []);
   const [htmlSource, setHtmlSource] = useState<string>('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
   const [response, setResponse] = useState<string>('{}');
   const [iframeUrl, setIframeUrl] = useState<string>('');
+
+  useEffect(() => {
+    // Get sessionId from URL or generate a new one
+    let guid = getQueryParam('sessionId');
+    if (guid) {
+      setIframeUrl(`http://127.0.0.1:5000/jobs/${guid}/index.html`);
+    } else {
+      guid = generateGUID();
+      const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
+      window.history.replaceState({ path: newUrl }, '', newUrl);
+    }
+    setSessionId(guid);
+  }, []);
 
   const scrollToLastElement = (elementId: string) => {
     const element = document.getElementById(elementId);
