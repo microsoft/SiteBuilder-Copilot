@@ -110,7 +110,7 @@ def get_image(session_id):
         print(e)
         return jsonify({'error': str(e)}), 500
 
-@app.route('/messages/<sessionId>', methods=['POST'])
+@app.route('/messages/<sessionId>', methods=['GET'])
 def get_messages(sessionId):
     try:
         agents = agent_factory.get_or_create_agents(sessionId)
