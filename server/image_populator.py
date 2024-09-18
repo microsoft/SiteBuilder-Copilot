@@ -26,7 +26,23 @@ class ImagePopulator:
         current_dir = os.path.dirname(os.path.abspath(__file__))
         return os.path.join(current_dir, 'jobs', self.session_id)
 
+    def create_image_lockfile(self):
+        lockfile_path = os.path.join(self.image_output_folder, 'images.lock')
+        with open(lockfile_path, 'w') as f:
+            pass
+        print(f"Created lockfile at: {lockfile_path}")
+
+    def delete_image_lockfile(self):
+        lockfile_path = os.path.join(self.image_output_folder, 'images.lock')
+        if os.path.exists(lockfile_path):
+            os.remove(lockfile_path)
+            print(f"Deleted lockfile at: {lockfile_path}")
+        else:
+            print(f"Lockfile not found at: {lockfile_path}")
+
+
     def process(self):
+        self.create_image_lockfile()
         print("Starting process method.")
         # Read the index.html file
         with open(self.html_path, 'r', encoding='utf-8') as f:
@@ -92,13 +108,23 @@ class ImagePopulator:
         print(f"Total placeholders found: {len(placeholders)}")
 
         # Initialize metadata dictionary
-        metadata = {
-            'imageCount': 0,
-            'mappings': []
-        }
+        metadata_file_path = os.path.join(self.image_output_folder, 'metadata.json')
+        if os.path.exists(metadata_file_path):
+            with open(metadata_file_path, 'r', encoding='utf-8') as f:
+                metadata = json.load(f)
+            print(f"Loaded existing metadata from {metadata_file_path}")
+        else:
+            metadata = {
+                'imageCount': 0,
+                'mappings': []
+            }
+
+        start_index = metadata['imageCount']
+        processed_images = 0  # Count of images processed in this run
 
         # Process each placeholder
-        for index, placeholder in enumerate(placeholders):
+        for placeholder in placeholders:
+            index = start_index + processed_images
             description = placeholder['description']
             if not description:
                 print(f"No description found for placeholder at index {index}, skipping.")
@@ -129,6 +155,7 @@ class ImagePopulator:
             else:
                 print(f'Failed to download image from {image_url}')
                 placeholder['image_path'] = None
+                continue  # Skip to the next placeholder if image download failed
 
             # Prepare data for metadata mapping
             mapping = {
@@ -152,6 +179,13 @@ class ImagePopulator:
 
             # Save mapping in placeholder for later use
             placeholder['mapping'] = mapping
+
+            # Increment processed_images and imageCount
+            processed_images += 1
+            metadata['imageCount'] += 1
+
+            # Append mapping to metadata
+            metadata['mappings'].append(mapping)
 
         # Update the HTML with new image paths and collect new element HTML
         for placeholder in placeholders:
@@ -190,12 +224,6 @@ class ImagePopulator:
                     new_element_html = str(style_tag)
                     mapping['new_element_html'] = new_element_html
 
-                # Increment imageCount
-                metadata['imageCount'] += 1
-
-                # Append mapping to metadata
-                metadata['mappings'].append(mapping)
-
             else:
                 print(f"No image generated for placeholder at index {mapping.get('index')}")
 
@@ -205,7 +233,6 @@ class ImagePopulator:
         print("Wrote modified HTML content back to file.")
 
         # Write the metadata .json file
-        metadata_file_path = os.path.join(self.image_output_folder, 'metadata.json')
         with open(metadata_file_path, 'w', encoding='utf-8') as f:
             json.dump(metadata, f, indent=4)
         print(f"Wrote metadata to {metadata_file_path}")
@@ -260,3 +287,5 @@ class ImagePopulator:
             print("Assistant message content updated with modified HTML.")
         else:
             print("No assistant messages found in the template_agent.")
+
+        self.delete_image_lockfile()

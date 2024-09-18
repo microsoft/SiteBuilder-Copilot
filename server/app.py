@@ -96,8 +96,9 @@ async def get_output(sessionId):
 def image_ready_check(sessionId):
     session_dir = get_session_directory(sessionId)
     img_dir = os.path.join(session_dir, 'template', 'img')
+    lock_file = os.path.join(img_dir, 'images.lock')
     
-    if os.path.exists(img_dir) and os.listdir(img_dir):
+    if os.path.exists(img_dir) and os.listdir(img_dir) and not os.path.exists(lock_file):
         return jsonify({"images_ready": True}), 200
     else:
         return jsonify({"images_ready": False}), 200
