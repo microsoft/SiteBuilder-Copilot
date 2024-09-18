@@ -81,15 +81,15 @@ function App() {
     const element = document.getElementById(elementId);
     if (element && element.lastElementChild) {
       setTimeout(() => {
-        element.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
+        element.parentElement!.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     }
   };
 
   const goToLastConversation = () => {
-    const element = document.getElementById('conversation');
-    if (element && element.lastElementChild) {
-        element.lastElementChild?.scrollIntoView({ behavior: 'auto' });
+    const container = document.getElementById('conversations-container');
+    if (container && container.lastElementChild) {
+      container.lastElementChild.scrollIntoView({ behavior: 'auto', block: 'end' });
     }
   };
 
@@ -124,7 +124,7 @@ function App() {
 
     if (prompt.trim()) {
       setConversations([...conversations, { prompt, response: 'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />' }]);
-      scrollToLastElement('conversation');
+      scrollToLastElement('conversations-container');
       setPrompt('');
       setLoading(true);
 
@@ -154,7 +154,7 @@ function App() {
               : conv
           )
         );
-        scrollToLastElement('conversation');
+        scrollToLastElement('conversations-container');
 
         if (currentSessionId) {
           pollForOutput(currentSessionId);

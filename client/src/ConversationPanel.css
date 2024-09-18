@@ -7,7 +7,7 @@ select {
     border-radius: 4px;
     background-color: #f9f9f9;
     color: #333;
-    width: 100%;
+    width: 19vw;
     box-sizing: border-box;
     cursor: pointer;
 }
@@ -23,17 +23,34 @@ select:hover, #new-chat-button:hover {
 #new-chat-button {
     width: 50px;
     height: 50px;
-    margin: 5px;
+    margin-right: 5px;
     border-radius: 4px;
     padding: 8px;
     border: 1px solid #ccc;
 }
 
 #new-chat-button-wrapper {
-    
     height: 50px;
 }
 
 #session-history {
     height: 50px
 }
+#conversation {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Full height of the viewport */
+  }
+  
+  #conversation-header {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 1000; 
+    margin-bottom: 5px;
+  }
+  
+  #conversations-container {
+    flex: 1;
+    overflow-y: auto;
+  }
