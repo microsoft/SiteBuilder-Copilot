@@ -54,7 +54,7 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
             <div className="submitted-prompt">{conversation.prompt}</div>
             <div
               className="ai-response"
-              dangerouslySetInnerHTML={{ __html: conversation.response }}
+              dangerouslySetInnerHTML={{ __html: '<b>Copilot:</b> ' + conversation.response }}
             />
           </div>
         ))}

@@ -45,15 +45,28 @@ html, body {
   margin-bottom: 10px;
 }
 
-.submitted-prompt, .ai-response {
-  width: 100%;
+.submitted-prompt {
   padding: 10px;
-  background-color: #f0f0f0;
+  background-color: #cfe1f5;
   border: 1px solid #ccc;
+  border-radius: 8px;
   box-sizing: border-box;
   font-size: 16px;
   white-space: pre-wrap;
   margin-bottom: 5px;
+  margin-left: 60px;
+}
+
+.ai-response {
+  padding: 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 16px;
+  white-space: pre-wrap;
+  margin-bottom: 5px;
+  margin-right: 60px;
 }
 
 .left-column .generated-recipe {
