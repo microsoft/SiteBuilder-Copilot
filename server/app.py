@@ -209,6 +209,16 @@ def get_session_history():
         print(e)
         return jsonify({'error': str(e)}), 500
 
+# TODO: POST VS DELETE?
+@app.route('/deletechat/<sessionId>', methods=['POST'])
+def delete_chat(sessionId):
+    try:
+        agent_factory.cleanup_session(sessionId)
+        return jsonify({'message': 'OK'}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({'error': str(e)}), 500
+
 def saveAttachment(file, session_id):
     upload_dir = os.path.join(get_session_directory(session_id), 'uploads')
     os.makedirs(upload_dir, exist_ok=True)
