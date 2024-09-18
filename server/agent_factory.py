@@ -82,6 +82,7 @@ class AgentFactory:
                      <img src="/img/placeholder.jpg" alt="Banner image depicting a spread of delicous custom cookies on a colorful background.">
                     - When the user needs an image as a background CSS use a a placeholder path, with a descriptive alt message in a comment on the same line as with this example below
                     background-image: url("/img/placeholder.jpg"); /*A soaring futuristic cityscape for the site banner.*/
+                    - Any existing images with a url beginning with http://127.0.0.1:5000 should be left unmodified, unless the user requests a change requiring a new image or its removal.
 
 
 
