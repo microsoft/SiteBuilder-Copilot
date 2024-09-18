@@ -10,4 +10,5 @@ export interface TabListProps {
     activeTabIndex: number;
     children: ReactElement<TabItemProps> | ReactElement<TabItemProps>[];
     handleDownload: () => void;
+    handleAzureUpload: () => Promise<boolean>;
 }

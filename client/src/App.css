@@ -139,7 +139,6 @@ html, body {
   display: flex;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 10px;
 }
 
 .tab-nav {
@@ -165,13 +164,19 @@ html, body {
   margin-bottom: -2px;
 }
 
-.download-button-wrapper {
+.right-tab-list-wrapper {
+  display: flex;
+  gap: 5px;
+  padding-right: 5px;;
+}
+
+.download-button-wrapper, .upload-button-wrapper {
   display: flex;
   align-items: center;
   margin: 0; /* Reset margin if any */
 }
 
-.download-button {
+.download-button, .upload-button {
   padding: 10px 20px;
   background-color: #007bff;
   color: white;
@@ -180,17 +185,21 @@ html, body {
   cursor: pointer;
   font-size: 16px;
   font-weight: bold;
-  min-width: 120px; /* Adjust as needed to fit content */
+  min-width: 75px; /* Adjust as needed to fit content */
 }
 
-.download-button:hover {
+.download-button:hover, .upload-button:hover {
   background-color: #0056b3;
 }
 
 .container, .tabs, .tab-panel {
   display: flex;
   height: 100vh; /* Full viewport height */
-  width: 100%;;
+  width: 100%;
+}
+
+.tab-panel {
+  overflow-y: auto;
 }
 
 #generated-content-iframe {
