@@ -305,22 +305,20 @@ function App() {
     const jsonStartIndex = response.indexOf('{');
     const jsonEndIndex = response.lastIndexOf('}') + 1;
 
-    let message = '';
+    let message = response;
     let responseSuggestions: string[] = [];
     if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
-      // original response without message
       message = response.substring(0, jsonStartIndex);
       try {
-        // set the options state
         const jsonString = response.substring(jsonStartIndex, jsonEndIndex);
-        responseSuggestions = JSON.parse(jsonString);
+        responseSuggestions = JSON.parse(jsonString).choices;
 
         console.log(responseSuggestions);
       } catch (error) {
         console.error('Failed to parse JSON:', error);
       }
     }
-    return { message, responseSuggestions: responseSuggestions };
+    return { message, responseSuggestions };
   };
 
   const handleSessionSelectCallback = async (selectedSessionId: string) => {
