@@ -214,7 +214,7 @@ html, body {
 }
 
 .tab-panel {
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 #generated-content-iframe {
