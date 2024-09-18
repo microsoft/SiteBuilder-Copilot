@@ -453,20 +453,16 @@ function App() {
             </label>
           </div>
           { browserSupportsSpeechRecognition &&
-          <div className="speech-input-wrapper" title="Speak a prompt">
-            <button className={listening ? "generic-button-input-on" : "generic-button-input-off"} onClick={handleSpeechChange}>
-              <span className="speech-input-icon">
-                <i className={`fas fa-microphone ${listening ? "fa-inverse" : ""}`}></i>
-              </span>
-            </button>
+          <div className={`generic-button-input-wrapper ${listening ? "generic-button-input-on" : "generic-button-input-off"}`} title="Speak a prompt" onClick={handleSpeechChange}>
+            <span className="speech-input-icon">
+              <i className={`fas fa-microphone ${listening ? "fa-inverse" : ""}`}></i>
+            </span>
           </div>
-        }
-          <div className="hear-input-wrapper" title="Hear the responses">
-            <button className={canDoTTS ? "generic-button-input-on" : "generic-button-input-off"} onClick={handleHearingChange}>
-              <span className="hear-input-icon">
-                <i className={`fas fa-headphones ${canDoTTS ? "fa-inverse" : ""}`}></i>
-              </span>
-            </button>
+          }
+          <div className={`generic-button-input-wrapper ${canDoTTS ? "generic-button-input-on" : "generic-button-input-off"}`} title="Hear the responses" onClick={handleHearingChange}>
+            <span className="hear-input-icon">
+              <i className={`fas fa-headphones ${canDoTTS ? "fa-inverse" : ""}`}></i>
+            </span>
           </div>
           <button className="send-button" onClick={handleSend}>
             <span className="send-icon">

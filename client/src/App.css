@@ -115,7 +115,7 @@ html, body {
   height: 40px;
 }
 
-.file-input-wrapper, .image-upload-wrapper {
+.file-input-wrapper, .image-upload-wrapper, .generic-button-input-wrapper {
   display: inline-block;
   position: relative;
 }
