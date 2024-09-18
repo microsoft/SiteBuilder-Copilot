@@ -245,23 +245,19 @@ function App() {
         }
 
         const data = await response.json();
-        const aiResponse = data.response;
-
-        // trim JSON suggestions from the AI response
-        // set state for the multiple choice options
-        const trimmedResponse = parseAiResponseWithOptions(aiResponse);
+        const aiResponse = parseAiResponseWithOptions(data.response);
 
         // const imageData = await fetchImageData(`${LOCAL_SERVER_BASE_URL}/getimage/${sessionId}`);
         // console.log(imageData);
 
         if (canDoTTS) {
-          setTextToSpeak(trimmedResponse.message);
+          setTextToSpeak(aiResponse.message);
         }
 
         setConversations((prevConversations) =>
           prevConversations.map((conv, index) =>
             index === prevConversations.length - 1
-              ? { ...conv, response: trimmedResponse }
+              ? { ...conv, response: aiResponse }
               : conv
           )
         );
@@ -336,7 +332,6 @@ function App() {
     const messages: Array<{content: string, role: string}> = data["messages"];
     const promptExchanges: Array<{prompt: string, response: AiResponse}> = [];
     for(let i = 1; i < messages.length - 1; i++) {
-      // TOOD: trim suggestion JSON from ai prompts
       const aiResponse = parseAiResponseWithOptions(messages[i+1].content);
       promptExchanges.push({ prompt: messages[i].content, response: aiResponse });
     }
