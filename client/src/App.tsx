@@ -201,10 +201,18 @@ function App() {
     }
   };
 
+  const handleDownload = () => {
+    const blob = new Blob([htmlSource], { type: 'text/html' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'generated-website.html';
+    link.click();
+  };
+
   return (
     <div className="container">
       <div className="left-column" style={{ width: '100%' }}>
-        <TabList activeTabIndex={0}>
+        <TabList activeTabIndex={0} handleDownload={handleDownload}>
           <TabItem name="Website">
             <div className="content-wrapper" style={{ position: 'relative', width: '100%', height: '100%' }}>
               {loading && (

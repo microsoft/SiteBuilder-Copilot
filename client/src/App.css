@@ -123,6 +123,13 @@ html, body {
   background-color: #e0e0e0;
 }
 
+.tab-list-wrapper {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
 .tab-nav {
   overflow-x: scroll;
 }
@@ -132,18 +139,40 @@ html, body {
 }
 
 .tab-list {
-  min-width: 100%;
   display: flex;
   gap: .5em;
   margin: 0;
   padding: 0;
   border-bottom: 2px solid #eee;
   color: #888;
-
+  list-style: none; /* Ensure no bullet points */
 }
+
 .tab-list li {
   display: block;
   margin-bottom: -2px;
+}
+
+.download-button-wrapper {
+  display: flex;
+  align-items: center;
+  margin: 0; /* Reset margin if any */
+}
+
+.download-button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  min-width: 120px; /* Adjust as needed to fit content */
+}
+
+.download-button:hover {
+  background-color: #0056b3;
 }
 
 .container, .tabs, .tab-panel {
