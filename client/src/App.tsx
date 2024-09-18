@@ -83,20 +83,21 @@ function App() {
     resetTranscript();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finalTranscript]);
-
+  
+  const checkAndSetIframeUrl = async (guid: string) => {
+    const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
+    if (response.status === 200) {
+      setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
+      populateConversations(guid);
+    } else {
+      guid = generateGUID();
+      const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
+      window.history.replaceState({ path: newUrl }, '', newUrl);
+      setSessionId(guid);
+    }
+  };
+  
   useEffect(() => {
-    const checkAndSetIframeUrl = async (guid: string) => {
-      const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
-      if (response.status === 200) {
-        setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
-        populateConversations(guid);
-      } else {
-        guid = generateGUID();
-        const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
-        window.history.replaceState({ path: newUrl }, '', newUrl);
-        setSessionId(guid);
-      }
-    };
     let guid = getQueryParam('sessionId');
     if (guid) {
       checkAndSetIframeUrl(guid);
@@ -299,6 +300,25 @@ function App() {
     }
   };
 
+  const handleDeleteChat = async() => {
+    try {
+      const response = await fetch(LOCAL_SERVER_BASE_URL + `deletechat/${sessionId}`, {
+        method: 'POST',
+      });
+      if(!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      else {
+        await fetchSessionHistory();
+        if (sessionHistory?.length > 0) {
+          checkAndSetIframeUrl(sessionHistory[0].sessionId);
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
   const handleSessionSelectCallback = async (selectedSessionId: string) => {
     const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${selectedSessionId}`;
     window.history.replaceState({ path: newUrl }, '', newUrl);
@@ -408,6 +428,7 @@ function App() {
           conversations={conversations}
           sessionHistory={sessionHistory}
           handleNewChat={handleNewChat}
+          handleDeleteChat={handleDeleteChat}
           selectedSession={sessionId}
           handleSessionSelectCallback={handleSessionSelectCallback}
         />
