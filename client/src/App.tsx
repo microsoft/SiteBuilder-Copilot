@@ -94,11 +94,28 @@ function App() {
     }
   };
 
-  const reloadIframe = () => {
-    const iframe = document.getElementById('generated-content-iframe') as HTMLIFrameElement;
-    // eslint-disable-next-line no-self-assign
-    iframe.src = iframe.src;
-  }
+  const pollForImages = async (sessionId: string, iframeUrl: string) => {
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await fetch(LOCAL_SERVER_BASE_URL + `image_readycheck/${sessionId}`, {
+          method: 'GET',
+        });
+        const data = await response.json();
+        if (data.images_ready) {
+            clearInterval(intervalId);
+            setTimeout(() => {
+              setIframeUrl( `${iframeUrl}?t=${new Date().getTime()}`);
+            }, 1000);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }, 1000);
+
+    setTimeout(() => {
+      clearInterval(intervalId);
+    }, 60000 * 2); // 2 minutes
+  };
 
   const pollForOutput = async (sessionId: string) => {
     const intervalId = setInterval(async () => {
@@ -112,12 +129,16 @@ function App() {
           setHtmlSource(data.htmldata);
           setIframeUrl(data.templateurl);
           setLoading(false);
-          reloadIframe();
+          pollForImages(sessionId, data.templateurl);
         }
       } catch (error) {
         console.error('Error:', error);
       }
     }, 1000);
+
+    setTimeout(() => {
+      clearInterval(intervalId);
+    }, 60000); // 60 seconds timeout
   };
 
   const handleSend = async () => {
