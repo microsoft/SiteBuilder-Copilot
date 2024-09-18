@@ -8,6 +8,8 @@ import re
 import asyncio
 import json
 
+from image_populator import ImagePopulator
+
 app = Flask(__name__)
 CORS(app)
 
@@ -16,6 +18,7 @@ agent_factory = AgentFactory()
 import asyncio
 from flask import Flask, request, jsonify, url_for
 import os
+import shutil
 
 @app.route('/sendprompt/<sessionId>', methods=['POST'])
 async def send_prompt(sessionId):
@@ -68,7 +71,6 @@ def deprecate_index_template(sessionId):
             os.remove(deprecated_path)
         os.rename(index_path, deprecated_path)
 
-
 @app.route('/getoutput/<sessionId>', methods=['POST'])
 async def get_output(sessionId):
     html_content = None
@@ -78,6 +80,7 @@ async def get_output(sessionId):
     if os.path.exists(template_path):
         with open(template_path, 'r', encoding='utf-8') as f:
             html_content = f.read()
+
         template_url = url_for('serve_html_template', session_id=sessionId, filename='index.html', _external=True)
     else:
         # If the template does not exist yet, return a not ready status
@@ -88,6 +91,17 @@ async def get_output(sessionId):
             "htmldata": html_content,
             "templateurl": template_url
         }), 200
+
+@app.route('/image_readycheck/<sessionId>', methods=['GET'])
+def image_ready_check(sessionId):
+    session_dir = get_session_directory(sessionId)
+    img_dir = os.path.join(session_dir, 'template', 'img')
+    
+    if os.path.exists(img_dir) and os.listdir(img_dir):
+        return jsonify({"images_ready": True}), 200
+    else:
+        return jsonify({"images_ready": False}), 200
+
     
 def process_template(prompt, file_content, sessionId, template_agent):
     html_response = template_agent.send_prompt(prompt, file_content)
@@ -95,6 +109,7 @@ def process_template(prompt, file_content, sessionId, template_agent):
     template_agent.save(os.path.join(session_dir, 'agents', 'template_agent.json'))
     html_response = trim_markdown(html_response)
     saveTemplate(html_response, sessionId)
+    process_images(sessionId)
 
 def process_details(prompt, file_content, sessionId, agent):
     session_dir = get_session_directory(sessionId)
@@ -115,6 +130,13 @@ def process_details(prompt, file_content, sessionId, agent):
     else:
         print(f"Details available for session {sessionId}")
 
+
+def process_images(sessionId):
+    html_path = os.path.join(get_session_directory(sessionId), 'template', 'index.html')
+    img_output_path = os.path.join(get_session_directory(sessionId), 'template', 'img')
+    image_populator = ImagePopulator(html_path=html_path, image_output_folder=img_output_path, session_id=sessionId)
+    image_populator.process()
+
 @app.route("/jobs/<session_id>/<filename>", methods=["GET"])
 def serve_html_template(session_id, filename):
     asset_dir = os.path.join(get_session_directory(session_id), 'template')
@@ -124,6 +146,15 @@ def serve_html_template(session_id, filename):
         return jsonify({"error": ""}), 404
 
     return send_from_directory(asset_dir, filename, as_attachment=False, mimetype=guess_type(filename)[0])
+
+@app.route('/img/placeholder.jpg', methods=['GET'])
+def serve_placeholder_image():
+    return send_from_directory(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets'), 'placeholder.jpg')
+
+@app.route('/<sessionid>/template/img/<filename>')
+def serve_image(sessionid, filename):
+    directory = os.path.join(get_session_directory(sessionid), 'template', 'img')
+    return send_from_directory(directory, filename)
 
 @app.route('/getimage/<session_id>', methods=['POST'])
 def get_image(session_id):
@@ -247,7 +278,7 @@ def saveTemplate(html_content, session_id):
     
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
-    
+
     return 'index.html'
 
 # A helper function that trims out markdown surrounding html, ```html and ``` code blocks
