@@ -47,6 +47,7 @@ function App() {
     let guid = getQueryParam('sessionId');
     if (guid) {
       checkAndSetIframeUrl(guid);
+      setSessionId(guid);
     } else {
       guid = generateGUID();
       const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
@@ -282,6 +283,7 @@ function App() {
           conversations={conversations}
           sessionHistory={sessionHistory}
           handleNewChat={handleNewChat}
+          selectedSession={sessionId}
           handleSessionSelectCallback={handleSessionSelectCallback}
         />
         <textarea
