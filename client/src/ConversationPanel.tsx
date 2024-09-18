@@ -25,6 +25,16 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
     const sessionId = event.target.value;
     handleSessionSelectCallback(sessionId);
   }
+
+  const renderContent = (content: string) => {
+    const imageTagMatch = content.includes("![image]");
+    if (imageTagMatch) {
+      const src = content.split("](")[1].replace(")", "");
+      return <img src={src} style={{ width: '50%', height: '50%' }} />;
+    }
+    return <div dangerouslySetInnerHTML={{ __html: content }} />;
+  }
+
   return (
     <div id="conversation" className="conversations">
       <div id="conversation-header" className="conversation-header">
@@ -51,7 +61,9 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
         {conversations &&
           conversations.map((conversation, index) => (
             <div key={index} className="conversation">
-              <div className="submitted-prompt">{conversation.prompt}</div>
+              <div className="submitted-prompt">
+                {renderContent(conversation.prompt)}
+              </div>
               <div
                 className="ai-response"
                 dangerouslySetInnerHTML={{ __html: '<b>Copilot:</b> ' + conversation.response }}

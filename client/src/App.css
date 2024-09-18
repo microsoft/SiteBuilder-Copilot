@@ -220,6 +220,22 @@ html, body {
   margin-bottom: 5px;
 }
 
+.url-input-box {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  border-radius: 15px;
+}
+.url-input-box input {
+  width: 250px;
+}
+
 @media (prefers-color-scheme: dark) {
   html, body {
     background-color: #1e1e1e;

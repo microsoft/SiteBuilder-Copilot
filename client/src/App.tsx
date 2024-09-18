@@ -28,6 +28,8 @@ function App() {
   const [iframeUrl, setIframeUrl] = useState<string>('');
   const [sessionHistory, setSessionHistory] = useState<SessionDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [showUrlInput, setShowUrlInput] = useState<boolean>(false);
+  const [imageUrl, setImageUrl] = useState<string>('');
 
   useEffect(() => {
     const checkAndSetIframeUrl = async (guid: string) => {
@@ -239,6 +241,11 @@ function App() {
     link.click();
   };
 
+  const handleImageUrlSubmit = () => {
+    setPrompt(`![image](${imageUrl})`);
+    setShowUrlInput(false);
+  };
+
   return (
     <div className="container">
       <div className="left-column" style={{ width: '100%' }}>
@@ -291,15 +298,21 @@ function App() {
         )}
         <div className="button-wrapper" title="Submit">
         <div className="image-upload-wrapper" title="Add an image">
-            <input
-              type="file"
-              id="image-upload"
-              onChange={handleFileChange}
-              style={{ display: 'none' }}
-            />
-            <label htmlFor="image-upload" className="image-upload-label">
+            {showUrlInput && (
+              <div className="url-input-box">
+                <small>Add an image</small>
+                <input
+                  type="text"
+                  placeholder="Paste link"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleImageUrlSubmit()}
+                />
+              </div>
+            )}
+            <div className="image-upload-label" onClick={() => setShowUrlInput(!showUrlInput)}>
               <i className="fas fa-image"></i>
-            </label>
+            </div>
           </div>
           <div className="file-input-wrapper" title="Add a file">
             <input
