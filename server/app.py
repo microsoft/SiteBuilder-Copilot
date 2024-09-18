@@ -16,6 +16,7 @@ agent_factory = AgentFactory()
 import asyncio
 from flask import Flask, request, jsonify, url_for
 import os
+import shutil
 
 @app.route('/sendprompt/<sessionId>', methods=['POST'])
 async def send_prompt(sessionId):
@@ -124,6 +125,11 @@ def serve_html_template(session_id, filename):
         return jsonify({"error": ""}), 404
 
     return send_from_directory(asset_dir, filename, as_attachment=False, mimetype=guess_type(filename)[0])
+
+@app.route('/jobs/<sessionid>/template/img/<filename>')
+def serve_image(sessionid, filename):
+    directory = os.path.join(get_session_directory(sessionid), 'template', 'img')
+    return send_from_directory(directory, filename)
 
 @app.route('/getimage/<session_id>', methods=['POST'])
 def get_image(session_id):
@@ -238,6 +244,14 @@ def saveTemplate(html_content, session_id):
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(html_content)
     
+        
+    img_dir = os.path.join(template_dir, 'img')
+    os.makedirs(img_dir, exist_ok=True)
+    placeholder_src = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'placeholder.jpg')
+    placeholder_dst = os.path.join(img_dir, 'placeholder.jpg')
+    shutil.copy(placeholder_src, placeholder_dst)
+
+
     return 'index.html'
 
 # A helper function that trims out markdown surrounding html, ```html and ``` code blocks
