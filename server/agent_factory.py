@@ -2,6 +2,7 @@ from agents import AzureOpenAIAgent, DallEAgent
 from config import config
 import os
 import time
+import shutil
 
 class AgentFactory:
     def __init__(self):
@@ -114,6 +115,23 @@ class AgentFactory:
     def get_session_directory(session_id):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         return os.path.join(current_dir, 'jobs', session_id)
+
+    def cleanup_session(self, session_id):
+        # Cleanup cached session
+        if (session_id in self.session_agents):
+            del self.session_agents[session_id]
+            del self.last_usage[session_id]
+        
+        # Cleanup folder
+        # Intentionally outside the if clause since cached sessions and 
+        # folders may not be in sync for fresh server runs
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        jobs_dir = os.path.join(current_dir, 'jobs')
+        for d in os.listdir(jobs_dir):
+            if (d == session_id):
+                fullPath = os.path.join(jobs_dir, d)
+                if os.path.isdir(fullPath):
+                    shutil.rmtree(fullPath)
 
     def cleanup_inactive_sessions(self):
         current_time = time.time()
