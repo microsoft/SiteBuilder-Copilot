@@ -287,5 +287,5 @@ class ImagePopulator:
             print("Assistant message content updated with modified HTML.")
         else:
             print("No assistant messages found in the template_agent.")
-
+        self.template_agent.save(os.path.join(self.session_dir, 'agents', 'template_agent.json'))
         self.delete_image_lockfile()
