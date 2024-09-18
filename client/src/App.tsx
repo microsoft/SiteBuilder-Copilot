@@ -289,13 +289,13 @@ function App() {
             Selected file: {selectedFile.name}
           </div>
         )}
-        <div className="button-wrapper">
+        <div className="button-wrapper" title="Submit">
           <button className="send-button" onClick={handleSend}>
             <span className="send-icon">
               <i className="fas fa-paper-plane"></i>
             </span>
           </button>
-          <div className="file-input-wrapper">
+          <div className="file-input-wrapper" title="Add a file">
             <input
               type="file"
               id="file-input"
