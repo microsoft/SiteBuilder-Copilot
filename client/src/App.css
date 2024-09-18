@@ -115,24 +115,23 @@ html, body {
   height: 40px;
 }
 
-.file-input-wrapper {
+.file-input-wrapper, .image-upload-wrapper {
   display: inline-block;
   position: relative;
 }
 
 
-.file-input-label {
+.file-input-label, .image-upload-label{
   cursor: pointer;
   display: inline-block;
   padding: 10px;
   padding-left: 15px;
   padding-right: 15px;
   border-radius: 4px;
-  background-color: #f0f0f0;
   transition: background-color 0.3s;
 }
 
-.file-input-label:hover {
+.file-input-label:hover, .image-upload-label:hover {
   background-color: #e0e0e0;
 }
 
@@ -274,12 +273,12 @@ html, body {
     color: white;
   }
 
-  .file-input-label {
+  .file-input-label, .image-upload-label{
     background-color: #444444;
     color: #f0f0f0;
   }
 
-  .file-input-label:hover {
+  .file-input-label:hover, .image-upload-label:hover {
     background-color: #555555;
   }
 

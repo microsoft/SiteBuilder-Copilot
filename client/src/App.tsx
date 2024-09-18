@@ -289,13 +289,19 @@ function App() {
             Selected file: {selectedFile.name}
           </div>
         )}
-        <div className="button-wrapper">
-          <button className="send-button" onClick={handleSend}>
-            <span className="send-icon">
-              <i className="fas fa-paper-plane"></i>
-            </span>
-          </button>
-          <div className="file-input-wrapper">
+        <div className="button-wrapper" title="Submit">
+        <div className="image-upload-wrapper" title="Add an image">
+            <input
+              type="file"
+              id="image-upload"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+            <label htmlFor="image-upload" className="image-upload-label">
+              <i className="fas fa-image"></i>
+            </label>
+          </div>
+          <div className="file-input-wrapper" title="Add a file">
             <input
               type="file"
               id="file-input"
@@ -306,6 +312,11 @@ function App() {
               <i className="fas fa-paperclip"></i>
             </label>
           </div>
+          <button className="send-button" onClick={handleSend}>
+            <span className="send-icon">
+              <i className="fas fa-paper-plane"></i>
+            </span>
+          </button>          
         </div>
       </div>
     </div>
