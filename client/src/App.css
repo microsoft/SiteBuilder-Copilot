@@ -120,8 +120,7 @@ html, body {
   position: relative;
 }
 
-
-.file-input-label, .image-upload-label{
+.file-input-label, .image-upload-label, .generic-button-input-off {
   cursor: pointer;
   display: inline-block;
   padding: 10px;
@@ -129,10 +128,27 @@ html, body {
   padding-right: 15px;
   border-radius: 4px;
   transition: background-color 0.3s;
+  margin-left: 3px;
 }
 
-.file-input-label:hover, .image-upload-label:hover {
+.file-input-label:hover, .image-upload-label:hover, .generic-button-input-off:hover {
   background-color: #e0e0e0;
+}
+
+.generic-button-input-on {
+  cursor: pointer;
+  display: inline-block;
+  padding: 10px;
+  padding-left: 15px;
+  padding-right: 15px;
+  border-radius: 4px;
+  background-color: #007bff;
+  transition: background-color 0.3s;
+  margin-left: 3px;
+}
+
+.generic-button-input-on:hover {
+  background-color: #006aee;
 }
 
 .tab-list-wrapper {

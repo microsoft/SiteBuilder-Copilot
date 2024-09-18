@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ConversationPanel from './ConversationPanel';
 import { TabItem, TabList } from './components/TabComponents';
+import 'regenerator-runtime/runtime';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import { useSpeech } from "react-text-to-speech";
 import { SessionDetails } from './types/SessionTypes';
 import './App.css';
 
@@ -30,6 +33,56 @@ function App() {
   const [loading, setLoading] = useState<boolean>(false);
   const [showUrlInput, setShowUrlInput] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string>('');
+  const {
+    transcript,
+    finalTranscript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+    isMicrophoneAvailable
+  } = useSpeechRecognition();
+  const [canDoTTS, setCanDoTTS] = useState(false);
+  const [textToSpeak, setTextToSpeak] = useState<string>('');
+  const {
+    speechStatus,
+    start : TextToSpeechStart,
+    stop : TextToSpeechStop
+  } = useSpeech({
+    text: textToSpeak,
+    voiceURI: "Microsoft Libby Online (Natural) - English (United Kingdom)",
+    onStop: (event) => {
+      console.log(event);
+      if (textToSpeak.length > 0) {
+        setTextToSpeak('');
+      }
+    }
+  });
+  
+  useEffect(() => {
+    if (textToSpeak.length == 0) {
+      return;
+    }
+
+    TextToSpeechStart();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [textToSpeak]);
+
+  useEffect(() => {
+    if (finalTranscript.length == 0) {
+      return;
+    }
+    setPrompt(prompt => {
+      let newPrompt = "";
+      if (prompt.length > 0) {
+        newPrompt += `${prompt} `;
+      }
+      newPrompt += finalTranscript;
+
+      return newPrompt;
+    });
+    resetTranscript();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finalTranscript]);
 
   useEffect(() => {
     const checkAndSetIframeUrl = async (guid: string) => {
@@ -103,6 +156,25 @@ function App() {
     iframe.src = iframe.src;
   }
 
+  // TODO: Re-enable image function when needed
+  // const fetchImageData = async (url: string) => {
+  //   const formData = new FormData();
+  //   formData.append('prompt', prompt);
+
+  //   const response = await fetch(url, {
+  //     method: 'POST',
+  //     body: formData,
+  //   });
+
+  //   if (!response.ok) {
+  //     throw new Error('Network response was not ok');
+  //   }
+
+  //   const data = await response.json();
+
+  //   return data;
+  // }
+
   const pollForOutput = async (sessionId: string) => {
     const intervalId = setInterval(async () => {
       try {
@@ -151,6 +223,13 @@ function App() {
         const data = await response.json();
         const aiResponse = data.response;
 
+        // const imageData = await fetchImageData(`${LOCAL_SERVER_BASE_URL}/getimage/${sessionId}`);
+        // console.log(imageData);
+
+        if (canDoTTS) {
+          setTextToSpeak(aiResponse);
+        }
+
         setConversations((prevConversations) =>
           prevConversations.map((conv, index) =>
             index === prevConversations.length - 1
@@ -193,6 +272,7 @@ function App() {
       setSelectedFile(null);
       setHtmlSource('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
       setResponse('{}');
+      setTextToSpeak('');
     } catch (error) {
       console.error('Error:', error);
     }
@@ -247,6 +327,25 @@ function App() {
     setShowUrlInput(false);
   };
 
+  const handleSpeechChange = async () => {
+    if (!isMicrophoneAvailable) {
+      return;
+    }
+
+    if (listening) {
+      await SpeechRecognition.stopListening();
+    } else {
+      await SpeechRecognition.startListening();
+    }
+  };
+
+  const handleHearingChange = async () => {
+    setCanDoTTS(!canDoTTS);
+    if (speechStatus == "started") {
+      TextToSpeechStop();
+    }
+  };
+
   return (
     <div className="container">
       <div className="left-column" style={{ width: '100%' }}>
@@ -289,7 +388,7 @@ function App() {
         <textarea
           className="scrollable-input"
           placeholder="Type your prompt here!"
-          value={prompt}
+          value={`${prompt}${transcript}`}
           onChange={(e) => setPrompt(e.target.value)}
           onKeyPress={handleKeyPress}
         ></textarea>
@@ -326,6 +425,22 @@ function App() {
             <label htmlFor="file-input" className="file-input-label">
               <i className="fas fa-paperclip"></i>
             </label>
+          </div>
+          { browserSupportsSpeechRecognition &&
+          <div className="speech-input-wrapper">
+            <button className={listening ? "generic-button-input-on" : "generic-button-input-off"} onClick={handleSpeechChange}>
+              <span className="speech-input-icon">
+                <i className={`fas fa-microphone ${listening ? "fa-inverse" : ""}`}></i>
+              </span>
+            </button>
+          </div>
+        }
+          <div className="hear-input-wrapper">
+            <button className={canDoTTS ? "generic-button-input-on" : "generic-button-input-off"} onClick={handleHearingChange}>
+              <span className="hear-input-icon">
+                <i className={`fas fa-headphones ${canDoTTS ? "fa-inverse" : ""}`}></i>
+              </span>
+            </button>
           </div>
           <button className="send-button" onClick={handleSend}>
             <span className="send-icon">
