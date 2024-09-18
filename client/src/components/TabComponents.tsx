@@ -3,10 +3,10 @@ import { TabItemProps, TabListProps } from "../types/TabTypes";
 import './TabComponents.css'; // Ensure you import the CSS file
 
 export const TabItem: React.FC<TabItemProps> = ({ name, children }) => (
-    <div className="tab-panel" id={`${name}`}>{children}</div>
+  <div className="tab-panel" id={`${name}`}>{children}</div>
 )
 
-export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0 }) => {
+export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, handleDownload }) => {
     const [activeTab, setActiveTab] = useState(activeTabIndex);
     const handleTabClick = (index: number) => {
       setActiveTab(index);
@@ -17,23 +17,30 @@ export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0 }
       );
     return (
       <div className="tabs">
-        <nav className="tab-list-wrapper">
-          <ul className="tab-list">
-            {tabs.map((tab, index) => (
-              <li key={`tab-${index}`}>
-                <button
-                  key={`tab-btn-${index}`}
-                  id={`tab-${tab.props.name}`}
-                  onClick={() => handleTabClick(index)}
+        <div className="tab-list-wrapper">
+          <nav>
+            <ul className="tab-list">
+              {tabs.map((tab, index) => (
+                <li key={`tab-${index}`}>
+                  <button
+                    key={`tab-btn-${index}`}
+                    id={`tab-${tab.props.name}`}
+                    onClick={() => handleTabClick(index)}
                   className={`tab-btn ${
                     activeTab === index && "tab-btn--active"
                   }`}
-                >{tab.props.name}</button>
-              </li>
-            ))}
-          </ul>
-        </nav>
+                  >{tab.props.name}</button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div className="download-button-wrapper">
+            <button className="download-button" onClick={handleDownload}>
+              Download Website
+            </button>
+          </div>
+        </div>
         {tabs[activeTab]}
       </div>
     );
-  };
+};
