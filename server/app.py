@@ -4,18 +4,17 @@ from flask_cors import CORS
 import os
 from agent_factory import AgentFactory
 import requests
-import re
+import shutil
 import asyncio
-import json
 
 app = Flask(__name__)
 CORS(app)
 
 agent_factory = AgentFactory()
 
-import asyncio
-from flask import Flask, request, jsonify, url_for
-import os
+def get_session_directory(session_id):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(current_dir, 'jobs', session_id)
 
 @app.route('/sendprompt/<sessionId>', methods=['POST'])
 async def send_prompt(sessionId):
@@ -34,24 +33,17 @@ async def send_prompt(sessionId):
     agents = agent_factory.get_or_create_agents(sessionId)
     orchestrator_agent = agents["orchestrator_agent"]
     template_agent = agents["template_agent"]
-    session_title_agent = agents["session_title_agent"]
-
-    session_dir = get_session_directory(sessionId)
-
-    if not os.path.exists(session_dir):
-        os.makedirs(session_dir)
 
     try:
         if file:
             file_content = saveAttachment(file, sessionId)
 
         plaintext_response = orchestrator_agent.send_prompt(prompt, file_content)
-        asyncio.create_task(asyncio.to_thread(process_details, prompt, file_content, sessionId, session_title_agent))
         asyncio.create_task(asyncio.to_thread(process_template, prompt, file_content, sessionId, template_agent))
         orchestrator_agent.save(os.path.join(session_dir, 'agents', 'orchestrator_agent.json'))
 
         return jsonify({
-            "response": plaintext_response
+            "response": plaintext_response,
         }), 200
     except Exception as e:
         print(e)
@@ -89,32 +81,70 @@ async def get_output(sessionId):
             "templateurl": template_url
         }), 200
     
+import traceback
+
+def saveAttachment(file, session_id):
+    upload_dir = os.path.join(get_session_directory(session_id), 'uploads')
+    os.makedirs(upload_dir, exist_ok=True)
+    file_path = os.path.join(upload_dir, file.filename)
+    file.save(file_path)
+    
+    with open(file_path, 'rb') as f:
+        file_content = f.read()
+    
+    return file_content
+
+def save_template(html_content, session_id):
+    template_dir = os.path.join(get_session_directory(session_id), 'template')
+    os.makedirs(template_dir, exist_ok=True)
+    file_path = os.path.join(template_dir, 'index.html')
+    
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+    
+    img_dir = os.path.join(template_dir, 'img')
+    os.makedirs(img_dir, exist_ok=True)
+    placeholder_src = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets', 'placeholder.jpg')
+    print(f"Debug: placeholder_src={placeholder_src}")
+    placeholder_dst = os.path.join(img_dir, 'placeholder.jpg')
+    print(f"Debug: placeholder_dst={placeholder_dst}")
+    shutil.copy(placeholder_src, placeholder_dst)
+
+    return 'index.html'
+
+def update_text(text, session_id):
+    # Remove target tokens
+    text = text.replace("```html", "")
+    text = text.replace("```", "")
+    
+    # Replace placeholder path with the new path
+    new_path = f' http://127.0.0.1:5000/jobs/{session_id}/template/img/placeholder.jpg'
+    text = text.replace("/temp_path/placeholder.jpg", new_path)
+    
+    return text
+
 def process_template(prompt, file_content, sessionId, template_agent):
+    print(f"Debug: Entered process_template with prompt={prompt}, sessionId={sessionId}")
+    
     html_response = template_agent.send_prompt(prompt, file_content)
+    print(f"Debug: Received html_response from send_prompt")
+
     session_dir = get_session_directory(sessionId)
+    print(f"Debug: session_dir={session_dir}")
+
     template_agent.save(os.path.join(session_dir, 'agents', 'template_agent.json'))
-    html_response = trim_markdown(html_response)
-    saveTemplate(html_response, sessionId)
+    print(f"Debug: Saved template_agent to {os.path.join(session_dir, 'agents', 'template_agent.json')}")
 
-def process_details(prompt, file_content, sessionId, agent):
-    session_dir = get_session_directory(sessionId)
-    details_file = os.path.join(session_dir, "details.json")
-    has_details_file = os.path.exists(details_file)
+    try:
+        html_response = update_text(html_response, sessionId)
+        print(f"Debug: html_response after replace_placeholder_image_path")
+    except Exception as e:
+        print(f"Error: Exception occurred in update_text: {e}")
+        traceback.print_exc()
 
-    if not has_details_file:
-        session_title = generate_title_from_prompt(agent, file_content, sessionId, prompt)
-        agent.save(os.path.join(session_dir, 'agents', 'session_title_agent.json'))
-        details = {
-            "title": session_title,
-            "sessionId": sessionId
-            }
-
-        with open(details_file, "w", encoding="utf-8") as f:
-            f.write(json.dumps(details))
-        print(f"Created details for session {sessionId}")
-    else:
-        print(f"Details available for session {sessionId}")
-
+    save_template(html_response, sessionId)
+    print(f"Debug: Saved template with sessionId={sessionId}")
+    
 @app.route("/jobs/<session_id>/<filename>", methods=["GET"])
 def serve_html_template(session_id, filename):
     asset_dir = os.path.join(get_session_directory(session_id), 'template')
@@ -124,6 +154,14 @@ def serve_html_template(session_id, filename):
         return jsonify({"error": ""}), 404
 
     return send_from_directory(asset_dir, filename, as_attachment=False, mimetype=guess_type(filename)[0])
+
+@app.route('/jobs/<sessionid>/template/img/<filename>')
+def serve_image(sessionid, filename):
+    directory = os.path.join(get_session_directory(sessionid), 'template', 'img')
+    return send_from_directory(directory, filename)
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 @app.route('/getimage/<session_id>', methods=['POST'])
 def get_image(session_id):
@@ -188,139 +226,15 @@ def new_chat(sessionId):
         print(e)
         return jsonify({'error': str(e)}), 500
 
-@app.route('/sessiondetails/<sessionId>', methods=['GET'])
-def get_session_details(sessionId):
-    return jsonify(get_session_details_internal(sessionId))
-
-
 @app.route('/sessionhistory', methods=['GET'])
 def get_session_history():
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
         jobs_dir = os.path.join(current_dir, 'jobs')
-        session_details_list = []
-        for d in os.listdir(jobs_dir):
-            if os.path.isdir(os.path.join(jobs_dir, d)):
-                session_details_list.append(get_session_details_internal(d))
-        
-        """ return jsonify([d for d in os.listdir(jobs_dir) if os.path.isdir(os.path.join(jobs_dir, d))]) """
-        return jsonify(session_details_list)
+        return jsonify([d for d in os.listdir(jobs_dir) if os.path.isdir(os.path.join(jobs_dir, d))])
     except Exception as e:
         print(e)
         return jsonify({'error': str(e)}), 500
-
-def saveAttachment(file, session_id):
-    upload_dir = os.path.join(get_session_directory(session_id), 'uploads')
-    os.makedirs(upload_dir, exist_ok=True)
-    file_path = os.path.join(upload_dir, file.filename)
-    file.save(file_path)
-    
-    with open(file_path, 'rb') as f:
-        file_content = f.read()
-    
-    return file_content
-
-def saveTemplate(html_content, session_id):
-    """
-    Saves the HTML content to an index.html file in the session's directory.
-    
-    Args:
-    html_content (str): The HTML content to save.
-    session_id (str): The session ID to determine the directory.
-    
-    Returns:
-    str: The filename of the saved index.html file.
-    """
-    template_dir = os.path.join(get_session_directory(session_id), 'template')
-    os.makedirs(template_dir, exist_ok=True)
-    file_path = os.path.join(template_dir, 'index.html')
-    
-    with open(file_path, 'w', encoding='utf-8') as f:
-        f.write(html_content)
-    
-    return 'index.html'
-
-# A helper function that trims out markdown surrounding html, ```html and ``` code blocks
-def trim_markdown(text):
-    # Remove leading and trailing whitespace
-    text = text.strip()
-    # Remove ```html from the beginning
-    text = re.sub(r'^```html', '', text)
-    # Remove ``` from the beginning and end
-    text = re.sub(r'^```|```$', '', text)
-    return text.strip()
-
-def get_session_directory(session_id):
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(current_dir, 'jobs', session_id)
-
-def extract_text(response, start_marker, end_marker):
-    """
-    Extracts title content from the given response string.
-    
-    Args:
-    response (str): The response string containing template content between +START+ and +END+.
-    start_marker: The start delimiter
-    end_marker: The end delimiter
-
-    Returns:
-    str: The extracted template content or an empty string if the markers are not found.
-    """
-    
-    start_index = response.find(start_marker)
-    end_index = response.find(end_marker)
-    
-    if (start_index == -1) or (end_index == -1):
-        return ""
-    
-    # Adjust indices to extract content between the markers
-    start_index += len(start_marker)
-    
-    return response[start_index:end_index].strip()
-
-def generate_title_from_prompt(agent, file_content, sessionId, prompt):
-    """
-    Generates a title from the first prompt in a chat
-
-    Args:
-    prompt (str): The first prompt for the chat session
-
-    Returns:
-    str: A title generated by AI based from the first prompt
-    """
-    session_dir = get_session_directory(sessionId)
-    title_prompt = f"""
-                    Please generate a website title for the website described in the following prompt: {prompt}
-                    Do not include curly brackets as part of the title as the title should be wrapped within curly brackets.
-                    """
-    try:
-        title_response = agent.send_prompt(title_prompt, file_content)
-        session_title = extract_text(title_response, '{', '}')
-        print(f"Chat title for {sessionId} = {session_title}")
-        return session_title
-    except Exception as e:
-        print(f"An error occured while generating title: {e}")
-    return sessionId
-
-def get_session_details_internal(sessionId):
-    try:
-        session_dir = get_session_directory(sessionId)
-        details_file = os.path.join(session_dir, "details.json")
-        has_details_file = os.path.exists(details_file)
-
-        if has_details_file:
-            details = None
-            with open(details_file, "r", encoding="utf-8") as f:
-                lines = f.read()
-                details = json.loads(lines)
-            return details
-    except Exception as e:
-        print(e)
-
-    return {
-        'title': sessionId,
-        'sessionId': sessionId
-        }
 
 if __name__ == '__main__':
     app.run(debug=True)
