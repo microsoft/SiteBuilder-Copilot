@@ -33,6 +33,7 @@ function App() {
       const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
       if (response.status === 200) {
         setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
+        populateConversations(guid);
       } else {
         guid = generateGUID();
         const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
@@ -82,6 +83,13 @@ function App() {
       setTimeout(() => {
         element.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
+    }
+  };
+
+  const goToLastConversation = () => {
+    const element = document.getElementById('conversation');
+    if (element && element.lastElementChild) {
+        element.lastElementChild?.scrollIntoView({ behavior: 'auto' });
     }
   };
 
@@ -192,7 +200,21 @@ function App() {
     setSessionId(selectedSessionId);
     setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${selectedSessionId}/index.html`);
 
-    // TODO: populate chat history
+    populateConversations(selectedSessionId);
+  };
+
+  const populateConversations = async (sessionId: string) => {
+    const response = await fetch(LOCAL_SERVER_BASE_URL + `messages/${sessionId}`);
+    const data = await response.json();
+    const messages: Array<{content: string, role: string}> = data["messages"];
+    const promptExchanges: Array<{prompt: string, response: string}> = [];
+    for(let i = 1; i < messages.length - 1; i++) {
+      promptExchanges.push({ prompt: messages[i].content, response: messages[i+1].content });
+    }
+    setConversations(promptExchanges);
+    setTimeout(() => {
+      goToLastConversation();
+    }, 50);
   };
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
