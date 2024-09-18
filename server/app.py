@@ -134,7 +134,7 @@ def process_details(prompt, file_content, sessionId, agent):
 def process_images(sessionId):
     html_path = os.path.join(get_session_directory(sessionId), 'template', 'index.html')
     img_output_path = os.path.join(get_session_directory(sessionId), 'template', 'img')
-    image_populator = ImagePopulator(html_path=html_path, image_output_folder=img_output_path, session_id=sessionId)
+    image_populator = ImagePopulator(html_path=html_path, image_output_folder=img_output_path, session_id=sessionId, agents=agent_factory.get_or_create_agents(sessionId))
     image_populator.process()
 
 @app.route("/jobs/<session_id>/<filename>", methods=["GET"])
