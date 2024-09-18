@@ -278,28 +278,6 @@ function App() {
     }
   };
 
-  const handleNewChat = async () => {
-    try {
-      const response = await fetch(LOCAL_SERVER_BASE_URL + `newchat/${sessionId}`, {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      // Reset the state for a new chat session
-      setPrompt('');
-      setConversations([]);
-      setSelectedFile(null);
-      setHtmlSource('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
-      setResponse('{}');
-      setTextToSpeak('');
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
   const handleDeleteChat = async() => {
     try {
       const response = await fetch(LOCAL_SERVER_BASE_URL + `deletechat/${sessionId}`, {
@@ -309,10 +287,7 @@ function App() {
         throw new Error('Network response was not ok');
       }
       else {
-        await fetchSessionHistory();
-        if (sessionHistory?.length > 0) {
-          checkAndSetIframeUrl(sessionHistory[0].sessionId);
-        }
+        window.location.reload();
       }
     } catch (error) {
       console.error('Error:', error);
@@ -427,7 +402,7 @@ function App() {
         <ConversationPanel
           conversations={conversations}
           sessionHistory={sessionHistory}
-          handleNewChat={handleNewChat}
+          handleNewChat={async () => { window.location.href = window.location.origin + window.location.pathname; }}
           handleDeleteChat={handleDeleteChat}
           selectedSession={sessionId}
           handleSessionSelectCallback={handleSessionSelectCallback}
