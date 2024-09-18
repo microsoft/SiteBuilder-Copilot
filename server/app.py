@@ -308,7 +308,7 @@ def get_session_details_internal(sessionId):
         if has_details_file:
             details = None
             with open(details_file, "r", encoding="utf-8") as f:
-                lines = f.readlines()
+                lines = f.read()
                 details = json.loads(lines)
             return details
     except Exception as e:
