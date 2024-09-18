@@ -6,7 +6,7 @@ export const TabItem: React.FC<TabItemProps> = ({ name, children }) => (
   <div className="tab-panel" id={`${name}`}>{children}</div>
 )
 
-export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, handleDownload }) => {
+export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, handleDownload, handleAzureUpload }) => {
     const [activeTab, setActiveTab] = useState(activeTabIndex);
     const handleTabClick = (index: number) => {
       setActiveTab(index);
@@ -34,11 +34,18 @@ export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, 
               ))}
             </ul>
           </nav>
-          <div className="download-button-wrapper">
-            <button className="download-button" onClick={handleDownload}>
-              Download Website
-            </button>
-          </div>
+          <div className="right-tab-list-wrapper">
+            <div className="download-button-wrapper" title="Download website">
+              <button className="download-button" onClick={handleDownload}>
+                <i className="fas fa-save"></i>
+              </button>
+            </div>
+            <div className="upload-button-wrapper" title="Upload to Azure">
+              <button className="upload-button" onClick={handleAzureUpload}>
+                <i className="fas fa-cloud"></i>
+              </button>
+            </div>
+          </div>          
         </div>
         {tabs[activeTab]}
       </div>

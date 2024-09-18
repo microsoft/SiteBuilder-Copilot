@@ -343,6 +343,11 @@ function App() {
     link.click();
   };
 
+  const handleAzureUpload = async () => {
+    alert("Not implemented yet!");
+    return Promise.resolve(false);
+  }
+
   const handleImageUrlSubmit = () => {
     setPrompt(`![image](${imageUrl})`);
     setShowUrlInput(false);
@@ -370,7 +375,7 @@ function App() {
   return (
     <div className="container">
       <div className="left-column" style={{ width: '100%' }}>
-        <TabList activeTabIndex={0} handleDownload={handleDownload}>
+        <TabList activeTabIndex={0} handleDownload={handleDownload} handleAzureUpload={handleAzureUpload}>
           <TabItem name="Website">
             <div className="content-wrapper" style={{ position: 'relative', width: '100%', height: '100%' }}>
               {loading && (
