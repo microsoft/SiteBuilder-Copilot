@@ -68,7 +68,7 @@ class ImagePopulator:
             })
 
         # Find elements with style attributes containing background-image
-        background_image_pattern = re.compile(r'background-image\s*:\s*url\([\'"]?(.+?)[\'"]?\);?')
+        background_image_pattern = re.compile(r'background-image\s*:\s*url\([\'"]?(.+?)[\'"]?\)\s*;?')
 
         elements_with_style = soup.find_all(style=True)
         print(f"Found {len(elements_with_style)} elements with style attributes.")
