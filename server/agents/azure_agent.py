@@ -28,6 +28,9 @@ class AzureOpenAIAgent:
         if system_message and not messages:
             self.messages.append({"role": "system", "content": system_message}) 
 
+    def messages(self):
+        return self._messages
+    
     def send_prompt(self, prompt: str, file_content: bytes = None) -> dict:
         """
         Sends a prompt to the LLM and returns the response. Continues an existing conversation if a conversation ID is provided.

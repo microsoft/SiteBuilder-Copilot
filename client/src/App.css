@@ -25,7 +25,6 @@ html, body {
 
 .right-column {
   width: 25vw;
-  height: 95vh;
   padding: 20px;
   background-color: #ffffff;
   border-left: 1px solid #ccc;
@@ -215,7 +214,7 @@ html, body {
 }
 
 .tab-panel {
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 #generated-content-iframe {

@@ -1,27 +1,48 @@
 import os
 import requests
 import re
+import json
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from agent_factory import AgentFactory
 
 class ImagePopulator:
-    def __init__(self, html_path: str, image_output_folder: str, session_id: str):
+    def __init__(self, html_path: str, image_output_folder: str, session_id: str, agents: any):
         print(f"Initializing ImagePopulator with html_path: {html_path}, image_output_folder: {image_output_folder}, session_id: {session_id}")
         self.html_path = html_path
         self.image_output_folder = image_output_folder
         self.session_id = session_id
-        self.agent_factory = AgentFactory()
-        agents = self.agent_factory.get_or_create_agents(session_id)
+        self.session_dir = self.get_session_directory()
 
         self.prompt_gen_agent = agents["image_prompt_agent"]
         self.image_gen_agent = agents["image_gen_agent"]
+        self.template_agent = agents["template_agent"]
 
         if not os.path.exists(self.image_output_folder):
             os.makedirs(self.image_output_folder)
             print(f"Created image output folder at: {self.image_output_folder}")
 
+    def get_session_directory(self):
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(current_dir, 'jobs', self.session_id)
+
+    def create_image_lockfile(self):
+        lockfile_path = os.path.join(self.image_output_folder, 'images.lock')
+        with open(lockfile_path, 'w') as f:
+            pass
+        print(f"Created lockfile at: {lockfile_path}")
+
+    def delete_image_lockfile(self):
+        lockfile_path = os.path.join(self.image_output_folder, 'images.lock')
+        if os.path.exists(lockfile_path):
+            os.remove(lockfile_path)
+            print(f"Deleted lockfile at: {lockfile_path}")
+        else:
+            print(f"Lockfile not found at: {lockfile_path}")
+
+
     def process(self):
+        self.create_image_lockfile()
         print("Starting process method.")
         # Read the index.html file
         with open(self.html_path, 'r', encoding='utf-8') as f:
@@ -47,7 +68,7 @@ class ImagePopulator:
             })
 
         # Find elements with style attributes containing background-image
-        background_image_pattern = re.compile(r'background-image\s*:\s*url\([\'"]?(.+?)[\'"]?\);?')
+        background_image_pattern = re.compile(r'background-image\s*:\s*url\([\'"]?(.+?)[\'"]?\)\s*;?')
 
         elements_with_style = soup.find_all(style=True)
         print(f"Found {len(elements_with_style)} elements with style attributes.")
@@ -86,8 +107,24 @@ class ImagePopulator:
 
         print(f"Total placeholders found: {len(placeholders)}")
 
+        # Initialize metadata dictionary
+        metadata_file_path = os.path.join(self.image_output_folder, 'metadata.json')
+        if os.path.exists(metadata_file_path):
+            with open(metadata_file_path, 'r', encoding='utf-8') as f:
+                metadata = json.load(f)
+            print(f"Loaded existing metadata from {metadata_file_path}")
+        else:
+            metadata = {
+                'imageCount': 0,
+                'mappings': []
+            }
+
+        start_index = metadata['imageCount']
+        processed_images = 0  # Count of images processed in this run
+
         # Process each placeholder
-        for index, placeholder in enumerate(placeholders):
+        for placeholder in placeholders:
+            index = start_index + processed_images
             description = placeholder['description']
             if not description:
                 print(f"No description found for placeholder at index {index}, skipping.")
@@ -96,11 +133,13 @@ class ImagePopulator:
 
             # Get image prompt from LLM
             image_prompt = self.prompt_gen_agent.send_prompt(description)
+            self.prompt_gen_agent.save(os.path.join(self.session_dir, 'agents', 'prompt_gen_agent.json'))
             placeholder['image_prompt'] = image_prompt
             print(f"Generated image prompt: {image_prompt}")
 
             # Generate image using DALL·E agent
             image_url = self.image_gen_agent.generate_image(image_prompt)
+            self.image_gen_agent.save(os.path.join(self.session_dir, 'agents', 'image_gen_agent.json'))
             placeholder['image_url'] = image_url
             print(f"Generated image URL: {image_url}")
 
@@ -116,9 +155,41 @@ class ImagePopulator:
             else:
                 print(f'Failed to download image from {image_url}')
                 placeholder['image_path'] = None
+                continue  # Skip to the next placeholder if image download failed
 
-        # Update the HTML with new image paths
+            # Prepare data for metadata mapping
+            mapping = {
+                'index': index,
+                'type': placeholder['type'],
+                'description': description,
+                'image_prompt': image_prompt,
+                'image_url': image_url,
+                'image_path': placeholder.get('image_path')
+            }
+
+            # Get the old element HTML before modification
+            if placeholder['type'] == 'img':
+                old_element_html = str(placeholder['tag'])
+            elif placeholder['type'] == 'style':
+                old_element_html = str(placeholder['tag'])
+            elif placeholder['type'] == 'css':
+                old_element_html = str(placeholder['style_tag'])
+
+            mapping['old_element_html'] = old_element_html
+
+            # Save mapping in placeholder for later use
+            placeholder['mapping'] = mapping
+
+            # Increment processed_images and imageCount
+            processed_images += 1
+            metadata['imageCount'] += 1
+
+            # Append mapping to metadata
+            metadata['mappings'].append(mapping)
+
+        # Update the HTML with new image paths and collect new element HTML
         for placeholder in placeholders:
+            mapping = placeholder.get('mapping', {})
             if placeholder.get('image_path'):
                 new_image_url = urljoin(f'http://127.0.0.1:5000/{self.session_id}/template/img/', placeholder['image_path'])
 
@@ -126,22 +197,95 @@ class ImagePopulator:
                     img_tag = placeholder['tag']
                     img_tag['src'] = new_image_url
                     print(f"Updated <img> tag with new src: {new_image_url}")
+
+                    # Get new element HTML
+                    new_element_html = str(img_tag)
+                    mapping['new_element_html'] = new_element_html
+
                 elif placeholder['type'] == 'style':
                     elem = placeholder['tag']
                     style_content = elem['style']
                     new_style_content = style_content.replace(placeholder_src, new_image_url)
                     elem['style'] = new_style_content
                     print(f"Updated style attribute with new background-image URL: {new_image_url}")
+
+                    # Get new element HTML
+                    new_element_html = str(elem)
+                    mapping['new_element_html'] = new_element_html
+
                 elif placeholder['type'] == 'css':
                     style_tag = placeholder['style_tag']
                     css_content = style_tag.string
                     new_css_content = css_content.replace(placeholder_src, new_image_url)
                     style_tag.string.replace_with(new_css_content)
                     print(f"Updated <style> tag with new background-image URL: {new_image_url}")
+
+                    # Get new element HTML
+                    new_element_html = str(style_tag)
+                    mapping['new_element_html'] = new_element_html
+
             else:
-                print(f"No image generated for placeholder: {placeholder}")
+                print(f"No image generated for placeholder at index {mapping.get('index')}")
 
         # Write the modified HTML back to the file
         with open(self.html_path, 'w', encoding='utf-8') as f:
             f.write(str(soup))
         print("Wrote modified HTML content back to file.")
+
+        # Write the metadata .json file
+        with open(metadata_file_path, 'w', encoding='utf-8') as f:
+            json.dump(metadata, f, indent=4)
+        print(f"Wrote metadata to {metadata_file_path}")
+
+        # Update the assistant message content in the template_agent
+        print("Updating the assistant message content in the template_agent.")
+        assistant_messages = [msg for msg in self.template_agent.messages if msg['role'] == 'assistant']
+        if assistant_messages:
+            last_assistant_message = assistant_messages[-1]
+            assistant_html_content = last_assistant_message['content']
+            # Parse the assistant's HTML content
+            soup_template = BeautifulSoup(assistant_html_content, 'html.parser')
+            print("Parsed assistant's HTML content with BeautifulSoup.")
+
+            # Update the assistant's HTML content using the mappings
+            for mapping in metadata['mappings']:
+                placeholder_type = mapping['type']
+                old_element_html = mapping['old_element_html']
+                new_element_html = mapping['new_element_html']
+
+                if placeholder_type == 'img':
+                    # Find and replace the old <img> tag
+                    old_tag = BeautifulSoup(old_element_html, 'html.parser').find('img')
+                    new_tag = BeautifulSoup(new_element_html, 'html.parser').find('img')
+                    if old_tag and new_tag:
+                        for img_tag in soup_template.find_all('img', src=placeholder_src):
+                            if img_tag.get('alt', '') == old_tag.get('alt', ''):
+                                img_tag.replace_with(new_tag)
+                                print(f"Replaced <img> tag in assistant's HTML content.")
+
+                elif placeholder_type == 'style':
+                    # Find and replace the style attribute in the element
+                    old_tag = BeautifulSoup(old_element_html, 'html.parser').find()
+                    new_tag = BeautifulSoup(new_element_html, 'html.parser').find()
+                    if old_tag and new_tag:
+                        for elem in soup_template.find_all(style=True):
+                            if elem['style'] == old_tag['style']:
+                                elem['style'] = new_tag['style']
+                                print(f"Updated style attribute in assistant's HTML content.")
+
+                elif placeholder_type == 'css':
+                    # Replace the CSS content in the <style> tag
+                    old_style_content = BeautifulSoup(old_element_html, 'html.parser').string
+                    new_style_content = BeautifulSoup(new_element_html, 'html.parser').string
+                    for style_tag in soup_template.find_all('style'):
+                        if style_tag.string and style_tag.string.strip() == old_style_content.strip():
+                            style_tag.string.replace_with(new_style_content)
+                            print(f"Updated <style> tag content in assistant's HTML content.")
+
+            # Update the assistant message's content
+            last_assistant_message['content'] = str(soup_template)
+            print("Assistant message content updated with modified HTML.")
+        else:
+            print("No assistant messages found in the template_agent.")
+        self.template_agent.save(os.path.join(self.session_dir, 'agents', 'template_agent.json'))
+        self.delete_image_lockfile()

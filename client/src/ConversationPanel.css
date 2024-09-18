@@ -12,7 +12,7 @@ select {
     cursor: pointer;
 }
 
-select:hover, #new-chat-button:hover {
+select:hover, #new-chat-button:hover, #delete-chat-button:hover {
     border-color: #646cff;
 }
 
@@ -20,7 +20,7 @@ select:hover, #new-chat-button:hover {
     display: flex;
 }
 
-#new-chat-button {
+#new-chat-button, #delete-chat-button {
     cursor: pointer;
     width: 50px;
     height: 50px;
@@ -30,7 +30,7 @@ select:hover, #new-chat-button:hover {
     border: 1px solid #ccc;
 }
 
-#new-chat-button-wrapper {
+#new-chat-button-wrapper, #delete-chat-button-wrapper {
     height: 50px;
 }
 

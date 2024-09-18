@@ -85,20 +85,21 @@ function App() {
     resetTranscript();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finalTranscript]);
-
+  
+  const checkAndSetIframeUrl = async (guid: string) => {
+    const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
+    if (response.status === 200) {
+      setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
+      populateConversations(guid);
+    } else {
+      guid = generateGUID();
+      const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
+      window.history.replaceState({ path: newUrl }, '', newUrl);
+      setSessionId(guid);
+    }
+  };
+  
   useEffect(() => {
-    const checkAndSetIframeUrl = async (guid: string) => {
-      const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
-      if (response.status === 200) {
-        setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
-        populateConversations(guid);
-      } else {
-        guid = generateGUID();
-        const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
-        window.history.replaceState({ path: newUrl }, '', newUrl);
-        setSessionId(guid);
-      }
-    };
     let guid = getQueryParam('sessionId');
     if (guid) {
       checkAndSetIframeUrl(guid);
@@ -283,23 +284,17 @@ function App() {
     }
   };
 
-  const handleNewChat = async () => {
+  const handleDeleteChat = async() => {
     try {
-      const response = await fetch(LOCAL_SERVER_BASE_URL + `newchat/${sessionId}`, {
+      const response = await fetch(LOCAL_SERVER_BASE_URL + `deletechat/${sessionId}`, {
         method: 'POST',
       });
-
-      if (!response.ok) {
+      if(!response.ok) {
         throw new Error('Network response was not ok');
       }
-
-      // Reset the state for a new chat session
-      setPrompt('');
-      setConversations([]);
-      setSelectedFile(null);
-      setHtmlSource('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
-      setResponse('{}');
-      setTextToSpeak('');
+      else {
+        window.location.reload();
+      }
     } catch (error) {
       console.error('Error:', error);
     }
@@ -438,7 +433,8 @@ function App() {
         <ConversationPanel
           conversations={conversations}
           sessionHistory={sessionHistory}
-          handleNewChat={handleNewChat}
+          handleNewChat={async () => { window.location.href = window.location.origin + window.location.pathname; }}
+          handleDeleteChat={handleDeleteChat}
           selectedSession={sessionId}
           handleSessionSelectCallback={handleSessionSelectCallback}
         />
