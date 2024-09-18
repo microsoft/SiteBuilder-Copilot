@@ -1,10 +1,11 @@
 import React from "react";
 import './ConversationPanel.css';
 import { SessionDetails } from './types/SessionTypes';
+import { AiResponse } from "./types/ConversationTypes";
 
 interface Conversation {
   prompt: string;
-  response: string;
+  response: AiResponse;
 }
 
 interface ConversationPanelProps {
@@ -68,7 +69,7 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
               </div>
               <div
                 className="ai-response"
-                dangerouslySetInnerHTML={{ __html: '<b>Copilot:</b> ' + conversation.response }}
+                dangerouslySetInnerHTML={{ __html: '<b>Copilot:</b> ' + conversation.response.message }}
               />
             </div>
           ))}

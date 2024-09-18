@@ -5,6 +5,8 @@ import 'regenerator-runtime/runtime';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useSpeech } from "react-text-to-speech";
 import { SessionDetails } from './types/SessionTypes';
+import { AiResponse } from './types/ConversationTypes';
+
 import './App.css';
 
 const LOCAL_SERVER_BASE_URL = 'http://127.0.0.1:5000/';
@@ -23,7 +25,7 @@ const getQueryParam = (name: string) => {
 
 function App() {
   const [prompt, setPrompt] = useState('');
-  const [conversations, setConversations] = useState<{ prompt: string, response: string }[]>([]);
+  const [conversations, setConversations] = useState<{ prompt: string, response: AiResponse }[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
   const [htmlSource, setHtmlSource] = useState<string>('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
@@ -220,7 +222,7 @@ function App() {
     const currentSessionId = sessionId || getQueryParam('sessionId');
 
     if (prompt.trim()) {
-      setConversations([...conversations, { prompt, response: 'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />' }]);
+      setConversations([...conversations, { prompt, response: { message:'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />', responseSuggestions: [] }}]);
       scrollToLastElement('conversations-container');
       setPrompt('');
       setLoading(true);
@@ -244,17 +246,21 @@ function App() {
         const data = await response.json();
         const aiResponse = data.response;
 
+        // trim JSON suggestions from the AI response
+        // set state for the multiple choice options
+        const trimmedResponse = parseAiResponseWithOptions(aiResponse);
+
         // const imageData = await fetchImageData(`${LOCAL_SERVER_BASE_URL}/getimage/${sessionId}`);
         // console.log(imageData);
 
         if (canDoTTS) {
-          setTextToSpeak(aiResponse);
+          setTextToSpeak(trimmedResponse.message);
         }
 
         setConversations((prevConversations) =>
           prevConversations.map((conv, index) =>
             index === prevConversations.length - 1
-              ? { ...conv, response: aiResponse }
+              ? { ...conv, response: trimmedResponse }
               : conv
           )
         );
@@ -299,6 +305,29 @@ function App() {
     }
   };
 
+  const parseAiResponseWithOptions = (response: string): AiResponse => {
+    console.log(response)
+    const jsonStartIndex = response.indexOf('{');
+    const jsonEndIndex = response.lastIndexOf('}') + 1;
+
+    let message = '';
+    let responseSuggestions: string[] = [];
+    if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
+      // original response without message
+      message = response.substring(0, jsonStartIndex);
+      try {
+        // set the options state
+        const jsonString = response.substring(jsonStartIndex, jsonEndIndex);
+        responseSuggestions = JSON.parse(jsonString);
+
+        console.log(responseSuggestions);
+      } catch (error) {
+        console.error('Failed to parse JSON:', error);
+      }
+    }
+    return { message, responseSuggestions: responseSuggestions };
+  };
+
   const handleSessionSelectCallback = async (selectedSessionId: string) => {
     const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${selectedSessionId}`;
     window.history.replaceState({ path: newUrl }, '', newUrl);
@@ -312,9 +341,11 @@ function App() {
     const response = await fetch(LOCAL_SERVER_BASE_URL + `messages/${sessionId}`);
     const data = await response.json();
     const messages: Array<{content: string, role: string}> = data["messages"];
-    const promptExchanges: Array<{prompt: string, response: string}> = [];
+    const promptExchanges: Array<{prompt: string, response: AiResponse}> = [];
     for(let i = 1; i < messages.length - 1; i++) {
-      promptExchanges.push({ prompt: messages[i].content, response: messages[i+1].content });
+      // TOOD: trim suggestion JSON from ai prompts
+      const aiResponse = parseAiResponseWithOptions(messages[i+1].content);
+      promptExchanges.push({ prompt: messages[i].content, response: aiResponse });
     }
     setConversations(promptExchanges);
     setTimeout(() => {
