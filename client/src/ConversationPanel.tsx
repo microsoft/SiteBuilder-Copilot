@@ -1,10 +1,11 @@
 import React from "react";
 import './ConversationPanel.css';
 import { SessionDetails } from './types/SessionTypes';
+import { AiResponse } from "./types/ConversationTypes";
 
 interface Conversation {
   prompt: string;
-  response: string;
+  response: AiResponse;
 }
 
 interface ConversationPanelProps {
@@ -38,6 +39,23 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
     }
     return <div dangerouslySetInnerHTML={{ __html: content }} />;
   }
+
+  const renderResponseSuggestions = (aiResponse: AiResponse) => {
+    if (!aiResponse.responseSuggestions.length) {
+      return null;
+    } else {
+      return (
+        <div className="ai-response-suggestions">
+          {aiResponse.responseSuggestions.map((suggestion, index) => (
+              <button key={index} className="response-suggestion">
+                {suggestion}
+              </button>
+            ))
+          }
+        </div>
+      );
+    }
+  };
 
   return (
     <div id="conversation" className="conversations">
@@ -83,10 +101,13 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
               <div className="submitted-prompt">
                 {renderContent(conversation.prompt)}
               </div>
-              <div
-                className="ai-response"
-                dangerouslySetInnerHTML={{ __html: '<b>Copilot:</b> ' + conversation.response }}
-              />
+              <div id="ai-response-container">
+                <div
+                  className="ai-response"
+                  dangerouslySetInnerHTML={{ __html: '<b>Copilot:</b> ' + conversation.response.message }}
+                />
+                {renderResponseSuggestions(conversation.response)}
+              </div>
             </div>
           ))}
       </div>
