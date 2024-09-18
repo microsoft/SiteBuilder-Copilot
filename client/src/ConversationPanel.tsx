@@ -1,5 +1,6 @@
 import React from "react";
 import './ConversationPanel.css';
+import { SessionDetails } from './types/SessionTypes';
 
 interface Conversation {
   prompt: string;
@@ -8,7 +9,7 @@ interface Conversation {
 
 interface ConversationPanelProps {
   conversations: Conversation[];
-  sessionHistory: string[];
+  sessionHistory: SessionDetails[];
   handleNewChat: () => Promise<void>;
   handleSessionSelectCallback: (sessionId: string) => void;
 }
@@ -40,8 +41,8 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
         {sessionHistory &&
           <select id="session-history" defaultValue={"DEFAULT"} onChange={handleSelect}>
             <option value="DEFAULT" disabled>Select a previous chat</option>
-            {sessionHistory.map((sessionId,) => (
-              <option key={sessionId} value={sessionId}>{sessionId}</option>
+            {sessionHistory.map((sessionDetails) => (
+              <option key={sessionDetails.sessionId} value={sessionDetails.sessionId}>{sessionDetails.title}</option>
             ))}
           </select>
         }

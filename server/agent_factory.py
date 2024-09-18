@@ -28,11 +28,13 @@ class AgentFactory:
             orchestrator_agent = None
             template_agent = None
             image_gen_agent = None
+            session_title_agent = None
 
             if os.path.exists(agents_dir):
                 orchestrator_path = os.path.join(agents_dir, 'orchestrator_agent.json')
                 template_path = os.path.join(agents_dir, 'template_agent.json')
                 image_gen_path = os.path.join(agents_dir, 'image_gen_agent.json')
+                title_path = os.path.join(agents_dir, 'session_title_agent.json')
 
                 if os.path.exists(orchestrator_path):
                     orchestrator_agent = AzureOpenAIAgent.load(orchestrator_path)
@@ -40,6 +42,8 @@ class AgentFactory:
                     template_agent = AzureOpenAIAgent.load(template_path)
                 if os.path.exists(image_gen_path):
                     image_gen_agent = DallEAgent.load(image_gen_path)
+                if os.path.exists(title_path):
+                    session_title_agent = AzureOpenAIAgent.load(title_path)
 
             if not orchestrator_agent:
                 orchestrator_agent = AzureOpenAIAgent(
@@ -79,6 +83,15 @@ class AgentFactory:
                     """
                 )
 
+            if not session_title_agent:
+                session_title_agent = AzureOpenAIAgent(
+                    api_key=self.api_key,
+                    api_version=self.api_version,
+                    base_url=self.base_url,
+                    model=self.model,
+                    system_message="You are an title generating agent for a website generator. Please provide a suitable website title based on the user's input."
+                )
+
             if not image_gen_agent:
                 image_gen_agent = DallEAgent(
                 api_key=self.image_api_key,
@@ -91,6 +104,7 @@ class AgentFactory:
             self.session_agents[session_id] = {
                 "orchestrator_agent": orchestrator_agent,
                 "template_agent": template_agent,
+                "session_title_agent": session_title_agent,
                 "image_gen_agent": image_gen_agent
             }
 

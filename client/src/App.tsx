@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ConversationPanel from './ConversationPanel';
 import { TabItem, TabList } from './components/TabComponents';
+import { SessionDetails } from './types/SessionTypes';
 import './App.css';
 
 const LOCAL_SERVER_BASE_URL = 'http://127.0.0.1:5000/';
@@ -25,7 +26,7 @@ function App() {
   const [htmlSource, setHtmlSource] = useState<string>('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
   const [response, setResponse] = useState<string>('{}');
   const [iframeUrl, setIframeUrl] = useState<string>('');
-  const [sessionHistory, setSessionHistory] = useState<string[]>([]);
+  const [sessionHistory, setSessionHistory] = useState<SessionDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
