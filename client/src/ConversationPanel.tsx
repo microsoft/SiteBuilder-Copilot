@@ -10,6 +10,7 @@ interface Conversation {
 interface ConversationPanelProps {
   conversations: Conversation[];
   sessionHistory: SessionDetails[];
+  selectedSession: string;
   handleNewChat: () => Promise<void>;
   handleSessionSelectCallback: (sessionId: string) => void;
 }
@@ -17,6 +18,7 @@ interface ConversationPanelProps {
 const ConversationPanel: React.FC<ConversationPanelProps> = ({
   conversations,
   sessionHistory,
+  selectedSession,
   handleNewChat,
   handleSessionSelectCallback,
 }) => {
@@ -39,7 +41,7 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
           </button>
         </div>
         {sessionHistory &&
-          <select id="session-history" defaultValue={"DEFAULT"} onChange={handleSelect}>
+          <select id="session-history" onChange={handleSelect} value={sessionHistory.find((detail) => selectedSession === detail.sessionId) ? selectedSession : "DEFAULT"}>
             <option value="DEFAULT" disabled>Select a previous chat</option>
             {sessionHistory.map((sessionDetails) => (
               <option key={sessionDetails.sessionId} value={sessionDetails.sessionId}>{sessionDetails.title}</option>
