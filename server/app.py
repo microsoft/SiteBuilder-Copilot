@@ -46,7 +46,7 @@ async def send_prompt(sessionId):
             file_content = saveAttachment(file, sessionId)
 
         plaintext_response = orchestrator_agent.send_prompt(prompt, file_content)
-        asyncio.create_task(asyncio.to_thread(process_details(prompt, file_content, sessionId, session_title_agent)))
+        asyncio.create_task(asyncio.to_thread(process_details, prompt, file_content, sessionId, session_title_agent))
         asyncio.create_task(asyncio.to_thread(process_template, prompt, file_content, sessionId, template_agent))
         orchestrator_agent.save(os.path.join(session_dir, 'agents', 'orchestrator_agent.json'))
 
@@ -111,6 +111,9 @@ def process_details(prompt, file_content, sessionId, agent):
 
         with open(details_file, "w", encoding="utf-8") as f:
             f.write(json.dumps(details))
+        print(f"Created details for session {sessionId}")
+    else:
+        print(f"Details available for session {sessionId}")
 
 @app.route("/jobs/<session_id>/<filename>", methods=["GET"])
 def serve_html_template(session_id, filename):
