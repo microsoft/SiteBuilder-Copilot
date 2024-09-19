@@ -47,7 +47,13 @@ async def send_prompt(sessionId):
 
     try:
         if file:
-            file_content = saveAttachment(file, sessionId)
+            if (is_image(file.filename)):
+                processAttachment(file, sessionId)
+                prompt = f"{prompt} Image uploaded: http://127.0.0.1:5000/{sessionId}/template/img/{file.filename}"
+                file_content = None
+            else:
+                file_content = saveAttachment(file, sessionId)
+                prompt = f"{prompt} File uploaded: {file.filename}"
 
         plaintext_response = orchestrator_agent.send_prompt(prompt, file_content)
         asyncio.create_task(asyncio.to_thread(process_details, prompt, file_content, sessionId, session_title_agent))
@@ -252,6 +258,11 @@ def delete_chat(sessionId):
         print(e)
         return jsonify({'error': str(e)}), 500
 
+def get_image_serve_dir(session_id):
+    session_dir = get_session_directory(session_id)
+    img_dir = os.path.join(session_dir, 'template', 'img')
+    return img_dir
+
 def saveAttachment(file, session_id):
     file_path = processAttachment(file, session_id)
     with open(file_path, 'rb') as f:
@@ -259,24 +270,34 @@ def saveAttachment(file, session_id):
     
     return file_content
 
+def is_image(file_path):
+    return file_path.lower().endswith((".jpg", ".jpeg", ".png", ".gif", ".bmp"))
+
 def processAttachment(file, session_id):
     upload_dir = os.path.join(get_session_directory(session_id), 'uploads')
     os.makedirs(upload_dir, exist_ok=True)
     file_path = ""
     try:
-        file_path = os.path.join(upload_dir, file.filename)
-        file.save(file_path)
-
         filename = file.filename.lower()
-        if (filename.endswith(".pdf")):
+        if filename.endswith(".pdf"):
+            file_path = os.path.join(upload_dir, file.filename)
+            file.save(file_path)
             text = ""
             reader = PdfReader(file_path)
             for p in reader.pages:
                 text += p.extract_text() + "\n"
             
-            file_path += ".txt"
-            with open(file_path, 'w') as f:
-                f.write(text)         
+            text_file_path = file_path + ".txt"
+            with open(text_file_path, 'w') as f:
+                f.write(text)
+            file_path = text_file_path
+        elif is_image(filename):
+            print("Upload was an image file, saving image to serve directory.")
+            image_dir = get_image_serve_dir(session_id)
+            os.makedirs(image_dir, exist_ok=True)
+            file_path = os.path.join(image_dir, file.filename)
+            file.save(file_path)
+            print(f"Saved image to: {file_path}")
     except Exception as e:
         print(e)
     return file_path
