@@ -319,7 +319,6 @@ function App() {
   };
 
   const parseAiResponseWithOptions = (response: string): AiResponse => {
-    console.log(response)
     const jsonStartIndex = response.indexOf('{');
     const jsonEndIndex = response.lastIndexOf('}') + 1;
 
@@ -331,7 +330,6 @@ function App() {
         const jsonString = response.substring(jsonStartIndex, jsonEndIndex);
         responseSuggestions = JSON.parse(jsonString).choices;
 
-        console.log(responseSuggestions);
       } catch (error) {
         ErrorHandler.handleError(error, 'Failed to parse JSON while making ai multi-option response.');
       }
@@ -354,7 +352,7 @@ function App() {
       const data = await response.json();
       const messages: Array<{ content: string, role: string }> = data["messages"];
       const promptExchanges: Array<{ prompt: string, response: AiResponse }> = [];
-      for (let i = 1; i < messages.length - 1; i++) {
+      for (let i = 1; i < messages.length - 1; i += 2) {
         const aiResponse = parseAiResponseWithOptions(messages[i + 1].content);
         promptExchanges.push({ prompt: messages[i].content, response: aiResponse });
       }
