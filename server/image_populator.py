@@ -3,19 +3,20 @@ import requests
 import re
 import json
 from bs4 import BeautifulSoup
+import concurrent.futures
 from urllib.parse import urljoin
 from agent_factory import AgentFactory
 
 class ImagePopulator:
-    def __init__(self, html_path: str, image_output_folder: str, session_id: str, agents: any):
+    def __init__(self, html_path: str, image_output_folder: str, session_id: str, agentFactory: AgentFactory):
         print(f"Initializing ImagePopulator with html_path: {html_path}, image_output_folder: {image_output_folder}, session_id: {session_id}")
         self.html_path = html_path
         self.image_output_folder = image_output_folder
         self.session_id = session_id
         self.session_dir = self.get_session_directory()
 
-        self.prompt_gen_agent = agents["image_prompt_agent"]
-        self.image_gen_agent = agents["image_gen_agent"]
+        self.agent_factory = agentFactory
+        agents = self.agent_factory.get_or_create_agents(session_id)
         self.template_agent = agents["template_agent"]
 
         if not os.path.exists(self.image_output_folder):
@@ -132,14 +133,16 @@ class ImagePopulator:
             print(f"Processing placeholder {index} with description: {description}")
 
             # Get image prompt from LLM
-            image_prompt = self.prompt_gen_agent.send_prompt(description)
-            self.prompt_gen_agent.save(os.path.join(self.session_dir, 'agents', 'prompt_gen_agent.json'))
+            prompt_gen_agent = self.agent_factory.get_imageprompt_agent()
+            image_prompt = prompt_gen_agent.send_prompt(description)
+            prompt_gen_agent.save(os.path.join(self.session_dir, 'agents', f'prompt_gen_agent_{index}.json'))
             placeholder['image_prompt'] = image_prompt
             print(f"Generated image prompt: {image_prompt}")
 
             # Generate image using DALL·E agent
-            image_url = self.image_gen_agent.generate_image(image_prompt)
-            self.image_gen_agent.save(os.path.join(self.session_dir, 'agents', 'image_gen_agent.json'))
+            image_gen_agent = self.agent_factory.get_imagegen_agent()
+            image_url = image_gen_agent.generate_image(image_prompt)
+            image_gen_agent.save(os.path.join(self.session_dir, 'agents', f'image_gen_agent_{index}.json'))
             placeholder['image_url'] = image_url
             print(f"Generated image URL: {image_url}")
 
