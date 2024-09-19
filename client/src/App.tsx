@@ -377,7 +377,6 @@ function App() {
       <div className="left-column" style={{ width: '100%' }}>
         <TabList activeTabIndex={0} handleDownload={handleDownload} handleAzureUpload={handleAzureUpload}>
           <TabItem name="Website">
-
               {loading && (
                 <div className="loading-spinner" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1 }}>
                   Generating Changes...
@@ -389,7 +388,6 @@ function App() {
               ) : (
                 <div id="generated-content" dangerouslySetInnerHTML={{ __html: htmlSource }} style={{ width: '100%', height: '100%' }} />
               )}
-  
           </TabItem>
           <TabItem name="Source">
             <div id="source-code-content" style={{ width: '100%', height: '100%' }}>
