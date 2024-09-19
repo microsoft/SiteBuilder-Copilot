@@ -27,10 +27,24 @@ const getQueryParam = (name: string) => {
 
 function App() {
   const [prompt, setPrompt] = useState('');
+  const [shouldSendPrompt, setShouldSendPrompt] = useState(false); // Flag to track when to send
+  useEffect(() => {
+    if (shouldSendPrompt) {
+      handleSend();  // Send when the prompt is updated
+      setShouldSendPrompt(false); // Reset flag after sending
+    }
+  }, [prompt, shouldSendPrompt]);
+
+  const handleClick = (newPrompt: string) => {
+    console.log("Button clicked with prompt: ", newPrompt);
+    setPrompt(newPrompt); // Set the new prompt
+    setShouldSendPrompt(true); // Trigger sending
+  };
+
+  const [htmlSource, setHtmlSource] = useState<string>();
   const [conversations, setConversations] = useState<{ prompt: string, response: AiResponse }[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
-  const [htmlSource, setHtmlSource] = useState<string>('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
   const [response, setResponse] = useState<string>('{}');
   const [iframeUrl, setIframeUrl] = useState<string>('');
   const [sessionHistory, setSessionHistory] = useState<SessionDetails[]>([]);
@@ -214,8 +228,8 @@ function App() {
   const isSessionSelected = (sessionId: string) => {
     const dropdown = document.getElementById('session-history') as HTMLSelectElement;
     if (dropdown) {
-        const selectedValue = dropdown.value;
-        return selectedValue === sessionId;
+      const selectedValue = dropdown.value;
+      return selectedValue === sessionId;
     }
     return false;
   };
@@ -233,9 +247,9 @@ function App() {
           setIframeUrl(data.templateurl);
           setLoading(false);
           pollForImages(sessionId, data.templateurl);
-          
+
           if (!isSessionSelected(sessionId)) {
-            fetchSessionHistory().then(()=>{
+            fetchSessionHistory().then(() => {
               setSessionDropDown(sessionId);
             });
           }
@@ -254,7 +268,7 @@ function App() {
     const fileExtension = (fileName.split('.').pop() || '').toLowerCase();
     return ['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExtension);
   };
-  
+
 
   const handleSendInternal = async (prompt: string) => {
     const currentSessionId = sessionId || getQueryParam('sessionId');
@@ -267,7 +281,7 @@ function App() {
           prompt = `${prompt} ![File Uploaded](${selectedFile.name})`
         }
       }
-      
+
       setConversations([...conversations, { prompt, response: { message: 'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />', responseSuggestions: [] } }]);
       scrollToLastElement('conversations-container');
       setPrompt('');
@@ -277,10 +291,10 @@ function App() {
         const formData = new FormData();
         formData.append('prompt', prompt);
         if (selectedFile) {
-            formData.append('file', selectedFile);
-            formData.append('prompt', prompt);
-        } 
-        
+          formData.append('file', selectedFile);
+          formData.append('prompt', prompt);
+        }
+
         const response = await fetch(LOCAL_SERVER_BASE_URL + `sendprompt/${currentSessionId}`, {
           method: 'POST',
           body: formData,
@@ -414,11 +428,13 @@ function App() {
   };
 
   const handleDownload = () => {
-    const blob = new Blob([htmlSource], { type: 'text/html' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'generated-website.html';
-    link.click();
+    if (htmlSource) {
+      const blob = new Blob([htmlSource], { type: 'text/html' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'generated-website.html';
+      link.click();
+    }
   };
 
   const handleAzureUpload = async () => {
@@ -462,9 +478,48 @@ function App() {
               </div>
             )}
             {iframeUrl ? (
-              <iframe id="generated-content-iframe" src={iframeUrl} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0, overflowY: 'hidden'}} />
+              <iframe id="generated-content-iframe" src={iframeUrl} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0, overflowY: 'hidden' }} />
             ) : (
-              <div id="generated-content" dangerouslySetInnerHTML={{ __html: htmlSource }} style={{ width: '100%', height: '100%' }} />
+              htmlSource == null ? ( // if no HTML and therefore a new session, show the starting menu
+                <main>
+                  <div className="welcome-section">
+                    <div className="welcome-message">
+                      <img src="/copilot.svg" alt="Logo" className="main-logo" />
+                      <h2>Welcome to SiteBuilder! We�re glad you�re here.</h2>
+                      <p>From prompt to fully functional purchasable websites in a few clicks</p>
+                      <h2 className='sub-header'>Make me a website for:</h2>
+                      <div className="button-grid">
+                        <button onClick={() => handleClick('A Videogame')}>
+                          Custom Videogames
+                        </button>
+                        <button onClick={() => handleClick('Personal Projects Page')}>
+                          Personal Projects & Resume
+                        </button>
+                        <button onClick={() => handleClick('Real Estate listings page')}>
+                          Real Estate Group listings
+                        </button>
+                        <button onClick={() => handleClick('E-commerce Storefront')}>
+                          E-commerce Storefronts
+                        </button>
+                        <button onClick={() => handleClick('Health & Fitness Blog')}>
+                          Health & Fitness Blogs
+                        </button>
+                        <button onClick={() => handleClick('Social Media Website')}>
+                          Social Media Sites
+                        </button>
+                        <button
+                          onClick={() => handleClick('Travel Agent Site')}>
+                          Travel Agent Sites
+                        </button>
+                        <button onClick={() => handleClick('Personal Wiki')}>
+                          Personal Wiki
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </main>
+              ) : ( // if we already have html just show that
+                <div id="generated-content" dangerouslySetInnerHTML={{ __html: htmlSource }} style={{ width: '100%', height: '100%' }} />)
             )}
           </TabItem>
           <TabItem name="Source">
@@ -491,7 +546,7 @@ function App() {
         />
         <textarea
           className="scrollable-input"
-          placeholder="Type your prompt here!"
+          placeholder="Ask for a website here!"
           value={`${prompt}${transcript}`}
           onChange={(e) => setPrompt(e.target.value)}
           onKeyPress={handleKeyPress}
