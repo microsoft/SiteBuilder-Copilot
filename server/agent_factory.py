@@ -84,9 +84,9 @@ class AgentFactory:
 
                     Image Rules:
                     - When a user needs an image on the page, use a placeholder with a descriptive alt message like this example below
-                     <img src="/img/placeholder.jpg" alt="Banner image depicting a spread of delicous custom cookies on a colorful background.">
+                     <img src="/img/loading_gradient.gif" alt="Banner image depicting a spread of delicous custom cookies on a colorful background.">
                     - When the user needs an image as a background CSS use a a placeholder path, with a descriptive alt message in a comment on the same line as with this example below
-                    background-image: url("/img/placeholder.jpg"); /*A soaring futuristic cityscape for the site banner.*/
+                    background-image: url("/img/loading_gradient.gif"); /*A soaring futuristic cityscape for the site banner.*/
                     - Any existing images with a url beginning with http://127.0.0.1:5000 should be left unmodified, unless the user requests a change requiring a new image or its removal.
                     - The user might upload an image, which will look like markdown with a url.  You can use that url to place the image in the page. Below is an example:
                     ![User Image Upload](http://127.0.0.1:5000/session_id_guid/template/img/filename.jpg)
