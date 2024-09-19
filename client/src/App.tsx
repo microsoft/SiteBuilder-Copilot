@@ -88,16 +88,15 @@ function App() {
   }, [finalTranscript]);
 
   const checkAndSetIframeUrl = async (guid: string) => {
-    try {
-      const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
-      if (!response.ok) {
-        throw new ResponseError(response.status, response.statusText);
-      }
-
+    const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
+    if (response.status === 200) {
       setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
       populateConversations(guid);
-    } catch (error) {
-      ErrorHandler.handleError(error, "Failed to load your local index.html file into Website tab.");
+    } else {
+      guid = generateGUID();
+      const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
+      window.history.replaceState({ path: newUrl }, '', newUrl);
+      setSessionId(guid);
     }
   };
 
@@ -315,7 +314,7 @@ function App() {
         window.location.reload();
       }
     } catch (error) {
-      console.error('Error:', error);
+      ErrorHandler.handleError(error, 'Failed to delete chat.');
     }
   };
 
@@ -334,7 +333,7 @@ function App() {
 
         console.log(responseSuggestions);
       } catch (error) {
-        console.error('Failed to parse JSON:', error);
+        ErrorHandler.handleError(error, 'Failed to parse JSON while making ai multi-option response.');
       }
     }
     return { message, responseSuggestions };
