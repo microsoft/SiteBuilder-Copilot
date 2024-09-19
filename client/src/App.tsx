@@ -87,6 +87,19 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finalTranscript]);
 
+  const setSessionDropDown = (sessionId: string) => {
+    const dropdown: HTMLSelectElement = document.getElementById('session-history') as HTMLSelectElement;
+    if (dropdown) {
+      const options = dropdown.options;
+      for (let i = 0; i < options.length; i++) {
+        if (options[i].value === sessionId) {
+          dropdown.selectedIndex = i;
+          break;
+        }
+      }
+    }
+  }
+
   const checkAndSetIframeUrl = async (guid: string) => {
     const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
     if (response.status === 200) {
@@ -197,24 +210,14 @@ function App() {
     }, 60000 * 2); // 2 minutes
   };
 
-  // TODO: Re-enable image function when needed
-  // const fetchImageData = async (url: string) => {
-  //   const formData = new FormData();
-  //   formData.append('prompt', prompt);
-
-  //   const response = await fetch(url, {
-  //     method: 'POST',
-  //     body: formData,
-  //   });
-
-  //   if (!response.ok) {
-  //     throw new Error('Network response was not ok');
-  //   }
-
-  //   const data = await response.json();
-
-  //   return data;
-  // }
+  const isSessionSelected = (sessionId: string) => {
+    const dropdown = document.getElementById('session-history') as HTMLSelectElement;
+    if (dropdown) {
+        const selectedValue = dropdown.value;
+        return selectedValue === sessionId;
+    }
+    return false;
+  };
 
   const pollForOutput = async (sessionId: string) => {
     const intervalId = setInterval(async () => {
@@ -229,6 +232,12 @@ function App() {
           setIframeUrl(data.templateurl);
           setLoading(false);
           pollForImages(sessionId, data.templateurl);
+          
+          if (!isSessionSelected(sessionId)) {
+            fetchSessionHistory().then(()=>{
+              setSessionDropDown(sessionId);
+            });
+          }
         }
       } catch (error) {
         ErrorHandler.handleError(error, "Failing to get an html response from ChatGPT server.");
@@ -420,17 +429,17 @@ function App() {
       <div className="left-column" style={{ width: '100%' }}>
         <TabList activeTabIndex={0} handleDownload={handleDownload} handleAzureUpload={handleAzureUpload}>
           <TabItem name="Website">
-              {loading && (
-                <div className="loading-spinner" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1 }}>
-                  Generating Changes...
-                  <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style={{ width: '20px', height: '20px' }} />
-                </div>
-              )}
-              {iframeUrl ? (
-                <iframe id="generated-content-iframe" src={iframeUrl} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0 }} />
-              ) : (
-                <div id="generated-content" dangerouslySetInnerHTML={{ __html: htmlSource }} style={{ width: '100%', height: '100%' }} />
-              )}
+            {loading && (
+              <div className="loading-spinner" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1 }}>
+                Generating Changes...
+                <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style={{ width: '20px', height: '20px' }} />
+              </div>
+            )}
+            {iframeUrl ? (
+              <iframe id="generated-content-iframe" src={iframeUrl} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0 }} />
+            ) : (
+              <div id="generated-content" dangerouslySetInnerHTML={{ __html: htmlSource }} style={{ width: '100%', height: '100%' }} />
+            )}
           </TabItem>
           <TabItem name="Source">
             <div id="source-code-content" style={{ width: '100%', height: '100%' }}>
