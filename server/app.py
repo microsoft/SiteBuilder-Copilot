@@ -49,7 +49,7 @@ async def send_prompt(sessionId):
         if file:
             if (is_image(file.filename)):
                 processAttachment(file, sessionId)
-                prompt = f"{prompt} Image uploaded: http://127.0.0.1:5000/{sessionId}/template/img/{file.filename}"
+                prompt = f"{prompt} ![User Image Upload](http://127.0.0.1:5000/{sessionId}/template/img/{file.filename})"
                 file_content = None
             else:
                 file_content = saveAttachment(file, sessionId)

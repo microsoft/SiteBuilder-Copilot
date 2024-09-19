@@ -76,3 +76,15 @@ select:hover, #new-chat-button:hover, #delete-chat-button:hover {
     background-color: #f9f9f9;
     user-select: text;
 }
+
+.file-attachment-label{
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 400;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #f9f9f9;
+    color: #333;
+    box-sizing: border-box;
+}
