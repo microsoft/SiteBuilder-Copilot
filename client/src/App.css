@@ -98,12 +98,16 @@ header {
   margin-right: 10px;
 }
 
+img {
+  border-radius: 5px;
+}
+
 main {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  padding-top: 60px; /* Offset for header */
+  margin-bottom: 140px;
+  /* Offset for header */
 }
 
 .welcome-section {
@@ -204,14 +208,17 @@ button:hover {
 /* Use CSS Grid for buttons */
 .button-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 columns */
-  gap: 30px; /* Spacing between buttons */
-  justify-items: center; /* Center buttons */
+  grid-template-columns: repeat(4, 1fr);
+  /* 4 columns */
+  gap: 30px;
+  /* Spacing between buttons */
+  justify-items: center;
+  /* Center buttons */
   margin: 20px;
 }
 
 .sub-header {
-  margin-top: 45px;
+  margin-top: 70px;
 }
 
 .fluent-card {
@@ -244,12 +251,6 @@ button:hover {
   height: 40px;
 }
 
-#source-code-content {
-  width: '100%';
-  height: '100%';
-  font-family: 'Courier New', Courier, monospace;
-  overflow-y: scroll;
-}
 
 .file-input-wrapper,
 .image-upload-wrapper,
@@ -360,6 +361,7 @@ button:hover {
 .tabs,
 .tab-panel {
   display: flex;
+  justify-content: center;
   height: 100vh;
   /* Full viewport height */
   width: 100%;

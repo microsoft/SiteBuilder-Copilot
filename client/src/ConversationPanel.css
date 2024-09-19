@@ -76,17 +76,20 @@ select:hover, #new-chat-button:hover, #delete-chat-button:hover {
     border-bottom: 1px solid #ccc;
 }
 
+.ai-response-suggestions {
+padding-left: 3px;
+}
+
 .response-suggestion {
     font-family: inherit;
-    padding: 4px;
+    padding: 5px;
     margin-right: 6px;
     margin-top: 2px;
     margin-bottom: 4px;
     font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: #f9f9f9;
+    font-weight: normal;
     user-select: text;
+    border-radius: 5px;
 }
 
 .file-attachment-label{
