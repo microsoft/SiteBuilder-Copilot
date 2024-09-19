@@ -27,48 +27,82 @@ const getQueryParam = (name: string) => {
 
 function App() {
   const [prompt, setPrompt] = useState('');
+  const [shouldSendPrompt, setShouldSendPrompt] = useState(false); // Flag to track when to send
+  useEffect(() => {
+    if (shouldSendPrompt) {
+      handleSend();  // Send when the prompt is updated
+      setShouldSendPrompt(false); // Reset flag after sending
+    }
+  }, [prompt, shouldSendPrompt]);
 
-  const startingPage = (
-    <main>
-      <div className="welcome-section">
-        <div className="welcome-message">
-          <img src="/copilot.svg" alt="Logo" className="main-logo" />
-          <h2>Welcome to SiteBuilder! We’re glad you’re here.</h2>
-          <p>From prompt to fully functional purchasable websites in a few clicks</p>
-          <h2 className='sub-header'>Make me a website for:</h2>
-          <div className="button-grid">
-            <button onClick={() => setPrompt('A Videogame')}>
-              Custom Videogames
-            </button>
-            <button onClick={() => setPrompt('Personal Projects Page')}>
-              Personal Projects & Resume
-            </button>
-            <button onClick={() => setPrompt('Real Estate listings page')}>
-              Real Estate Group listings
-            </button>
-            <button onClick={() => setPrompt('E-commerce Storefront')}>
-              E-commerce Storefronts
-            </button>
-            <button onClick={() => setPrompt('Health & Fitness Blog')}>
-              Health & Fitness Blogs
-            </button>
-            <button onClick={() =>setPrompt('Social Media Website')}>
-              Social Media Sites
-            </button>
-            <button
-              onClick={() =>setPrompt('Travel Agent Site')}>
-              Travel Agent Sites
-            </button>
-            <button onClick={() =>setPrompt('Personal Wiki')}>
-              Personal Wiki
-            </button>
-          </div>
-        </div>
-      </div>
-    </main>
-  );
+  const handleClick = (newPrompt: string) => {
+    console.log("Button clicked with prompt: ", newPrompt);
+    setPrompt(newPrompt); // Set the new prompt
+    setShouldSendPrompt(true); // Trigger sending
+  };
 
-  const [htmlSource, setHtmlSource] = useState<string>(renderToString(startingPage));
+  const handleSend = async () => {
+    const currentSessionId = sessionId || getQueryParam('sessionId');
+
+    if (prompt.trim()) {
+      setConversations([...conversations, { prompt, response: { message: 'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />', responseSuggestions: [] } }]);
+      scrollToLastElement('conversations-container');
+      setPrompt('');
+      setLoading(true);
+
+      try {
+        const formData = new FormData();
+        formData.append('prompt', prompt);
+        if (selectedFile) {
+          formData.append('file', selectedFile);
+        }
+
+        const response = await fetch(LOCAL_SERVER_BASE_URL + `sendprompt/${currentSessionId}`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new NetworkError('Failed to send prompt');
+        }
+
+        const data = await response.json();
+        const aiResponse = parseAiResponseWithOptions(data.response);
+
+        // const imageData = await fetchImageData(`${LOCAL_SERVER_BASE_URL}/getimage/${sessionId}`);
+        // console.log(imageData);
+
+        if (canDoTTS) {
+          setTextToSpeak(aiResponse.message);
+        }
+
+        setConversations((prevConversations) =>
+          prevConversations.map((conv, index) =>
+            index === prevConversations.length - 1
+              ? { ...conv, response: aiResponse }
+              : conv
+          )
+        );
+        scrollToLastElement('conversations-container');
+
+        if (currentSessionId) {
+          pollForOutput(currentSessionId);
+        }
+
+        setResponse(JSON.stringify(data));
+        const placeholderBanner = document.getElementById('placeholder-banner');
+        if (placeholderBanner) {
+          placeholderBanner.remove();
+        }
+
+        setSelectedFile(null);
+      } catch (error) {
+        ErrorHandler.handleError(error, 'Failed to receive reply to your prompt.');
+      }
+    }
+  };
+
+  const [htmlSource, setHtmlSource] = useState<string>();
   const [conversations, setConversations] = useState<{ prompt: string, response: AiResponse }[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
@@ -255,8 +289,8 @@ function App() {
   const isSessionSelected = (sessionId: string) => {
     const dropdown = document.getElementById('session-history') as HTMLSelectElement;
     if (dropdown) {
-        const selectedValue = dropdown.value;
-        return selectedValue === sessionId;
+      const selectedValue = dropdown.value;
+      return selectedValue === sessionId;
     }
     return false;
   };
@@ -274,9 +308,9 @@ function App() {
           setIframeUrl(data.templateurl);
           setLoading(false);
           pollForImages(sessionId, data.templateurl);
-          
+
           if (!isSessionSelected(sessionId)) {
-            fetchSessionHistory().then(()=>{
+            fetchSessionHistory().then(() => {
               setSessionDropDown(sessionId);
             });
           }
@@ -289,67 +323,6 @@ function App() {
     setTimeout(() => {
       clearInterval(intervalId);
     }, 60000); // 60 seconds timeout
-  };
-
-  const handleSend = async () => {
-    const currentSessionId = sessionId || getQueryParam('sessionId');
-
-    if (prompt.trim()) {
-      setConversations([...conversations, { prompt, response: { message: 'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />', responseSuggestions: [] } }]);
-      scrollToLastElement('conversations-container');
-      setPrompt('');
-      setLoading(true);
-
-      try {
-        const formData = new FormData();
-        formData.append('prompt', prompt);
-        if (selectedFile) {
-          formData.append('file', selectedFile);
-        }
-
-        const response = await fetch(LOCAL_SERVER_BASE_URL + `sendprompt/${currentSessionId}`, {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new NetworkError('Failed to send prompt');
-        }
-
-        const data = await response.json();
-        const aiResponse = parseAiResponseWithOptions(data.response);
-
-        // const imageData = await fetchImageData(`${LOCAL_SERVER_BASE_URL}/getimage/${sessionId}`);
-        // console.log(imageData);
-
-        if (canDoTTS) {
-          setTextToSpeak(aiResponse.message);
-        }
-
-        setConversations((prevConversations) =>
-          prevConversations.map((conv, index) =>
-            index === prevConversations.length - 1
-              ? { ...conv, response: aiResponse }
-              : conv
-          )
-        );
-        scrollToLastElement('conversations-container');
-
-        if (currentSessionId) {
-          pollForOutput(currentSessionId);
-        }
-
-        setResponse(JSON.stringify(data));
-        const placeholderBanner = document.getElementById('placeholder-banner');
-        if (placeholderBanner) {
-          placeholderBanner.remove();
-        }
-
-        setSelectedFile(null);
-      } catch (error) {
-        ErrorHandler.handleError(error, 'Failed to receive reply to your prompt.');
-      }
-    }
   };
 
   const handleDeleteChat = async () => {
@@ -480,7 +453,46 @@ function App() {
             {iframeUrl ? (
               <iframe id="generated-content-iframe" src={iframeUrl} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0 }} />
             ) : (
-              <div id="generated-content" dangerouslySetInnerHTML={{ __html: htmlSource }} style={{ width: '100%', height: '100%' }} />
+              htmlSource == null ? ( // if no HTML and therefore a new session, show the starting menu
+                <main>
+                  <div className="welcome-section">
+                    <div className="welcome-message">
+                      <img src="/copilot.svg" alt="Logo" className="main-logo" />
+                      <h2>Welcome to SiteBuilder! We’re glad you’re here.</h2>
+                      <p>From prompt to fully functional purchasable websites in a few clicks</p>
+                      <h2 className='sub-header'>Make me a website for:</h2>
+                      <div className="button-grid">
+                        <button onClick={() => handleClick('A Videogame')}>
+                          Custom Videogames
+                        </button>
+                        <button onClick={() => handleClick('Personal Projects Page')}>
+                          Personal Projects & Resume
+                        </button>
+                        <button onClick={() => handleClick('Real Estate listings page')}>
+                          Real Estate Group listings
+                        </button>
+                        <button onClick={() => handleClick('E-commerce Storefront')}>
+                          E-commerce Storefronts
+                        </button>
+                        <button onClick={() => handleClick('Health & Fitness Blog')}>
+                          Health & Fitness Blogs
+                        </button>
+                        <button onClick={() => handleClick('Social Media Website')}>
+                          Social Media Sites
+                        </button>
+                        <button
+                          onClick={() => handleClick('Travel Agent Site')}>
+                          Travel Agent Sites
+                        </button>
+                        <button onClick={() => handleClick('Personal Wiki')}>
+                          Personal Wiki
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </main>
+              ) : ( // if we already have html just show that
+                <div id="generated-content" dangerouslySetInnerHTML={{ __html: htmlSource }} style={{ width: '100%', height: '100%' }} />)
             )}
           </TabItem>
           <TabItem name="Source">

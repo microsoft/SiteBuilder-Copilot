@@ -187,6 +187,7 @@ button {
   border: none;
   padding: 15px 30px;
   font-size: 18px;
+  font-weight: bold;
   border-radius: 8px;
   cursor: pointer;
   transition: transform 0.2s ease, background-color 0.2s ease;
