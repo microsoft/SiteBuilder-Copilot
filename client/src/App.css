@@ -331,11 +331,21 @@ button:hover {
 }
 
 .download-button-wrapper,
-.upload-button-wrapper {
+.upload-button-wrapper,
+.chat-visibility-button {
   display: flex;
   align-items: center;
   margin: 0;
   /* Reset margin if any */
+}
+
+.chat-visibility-button {
+  cursor: pointer;
+  padding: 10px;
+}
+
+.chat-visibility-button:hover {
+  color: #4d3c77;
 }
 
 .download-button,
