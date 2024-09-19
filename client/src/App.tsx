@@ -37,6 +37,7 @@ function App() {
   const [loading, setLoading] = useState<boolean>(false);
   const [showUrlInput, setShowUrlInput] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string>('');
+  const [isChatVisible, setIsChatVisible] = useState<boolean>(true);
   const {
     transcript,
     finalTranscript,
@@ -453,7 +454,7 @@ function App() {
   return (
     <div className="container">
       <div className="left-column" style={{ width: '100%' }}>
-        <TabList activeTabIndex={0} handleDownload={handleDownload} handleAzureUpload={handleAzureUpload}>
+        <TabList activeTabIndex={0} handleDownload={handleDownload} handleAzureUpload={handleAzureUpload} isChatVisible={isChatVisible} setIsChatVisible={setIsChatVisible}>
           <TabItem name="Website">
             {loading && (
               <div className="loading-spinner" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1 }}>
@@ -479,7 +480,7 @@ function App() {
           </TabItem>
         </TabList>
       </div>
-      <div className="right-column">
+      <div className="right-column" style={{ display: isChatVisible ? 'block' : 'none' }}>
         <ConversationPanel
           conversations={conversations}
           sessionHistory={sessionHistory}
