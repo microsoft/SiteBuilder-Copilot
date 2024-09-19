@@ -114,6 +114,10 @@ html, body {
   height: 40px;
 }
 
+.send-button:hover {
+  background-color: #005abb;
+}
+
 .file-input-wrapper, .image-upload-wrapper, .generic-button-input-wrapper {
   display: inline-block;
   position: relative;
@@ -153,7 +157,8 @@ html, body {
 .tab-list-wrapper {
   display: flex;
   justify-content: space-between;
-  width: 100%;
+  max-width: 100%;
+  margin: 8px;
 }
 
 .tab-nav {
@@ -169,7 +174,6 @@ html, body {
   gap: .5em;
   margin: 0;
   padding: 0;
-  border-bottom: 2px solid #eee;
   color: #888;
   list-style: none; /* Ensure no bullet points */
 }
