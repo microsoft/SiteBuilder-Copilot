@@ -6,7 +6,7 @@ export const TabItem: React.FC<TabItemProps> = ({ name, children }) => (
   <div className="tab-panel" id={`${name}`}>{children}</div>
 )
 
-export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, handleDownload, handleAzureUpload }) => {
+export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, handleDownload, handleAzureUpload, isChatVisible, setIsChatVisible }) => {
   const [activeTab, setActiveTab] = useState(activeTabIndex);
   const handleTabClick = (index: number) => {
     setActiveTab(index);
@@ -50,7 +50,10 @@ export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, 
                 <i className="fas fa-cloud"></i>
               </button>
             </div>
-          </div>
+            <div className="chat-visibility-button" onClick={() => setIsChatVisible(!isChatVisible)} title={`${isChatVisible ? "Hide chat": "Show chat"}`}>
+              <i className={`fas ${isChatVisible ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
+            </div>
+            </div>            
         </div>
       </div>
       {tabs[activeTab]}

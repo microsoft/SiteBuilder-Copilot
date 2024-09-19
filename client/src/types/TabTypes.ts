@@ -11,4 +11,6 @@ export interface TabListProps {
     children: ReactElement<TabItemProps> | ReactElement<TabItemProps>[];
     handleDownload: () => void;
     handleAzureUpload: () => Promise<boolean>;
+    isChatVisible: boolean;
+    setIsChatVisible: (isChatVisible: boolean) => void;
 }

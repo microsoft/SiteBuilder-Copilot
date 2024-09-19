@@ -124,7 +124,13 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
         </div>
       </div>
       <div id="conversations-container">
-        {conversations &&
+      {conversations.length === 0 ? (
+          <div className="conversation">
+            <div className="ai-response">
+              <b>Copilot:</b> Hi, I am SiteBuilder Copilot. I'm excited to start building your website with you!
+            </div>
+          </div>
+        ) : (
           conversations.map((conversation, index) => (
             <div key={index} className="conversation">
               <div className="submitted-prompt">
@@ -138,7 +144,8 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
                 {renderResponseSuggestions(conversation.response)}
               </div>
             </div>
-          ))}
+          ))
+        )}
       </div>
     </div>
   );

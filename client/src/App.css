@@ -1,3 +1,119 @@
+.tabs-header-container {
+  width: 100%; /* Makes sure the header spans full width */
+  border-bottom: 1px solid #ddd; /* Optional for adding a border under the header */
+  box-sizing: border-box;
+}
+
+.tabs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background-color: white;
+}
+
+.logo-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Reduced gap to make logo and title more compact */
+  padding: 10px; /* Adjust padding */
+  padding-left: 20px;
+}
+
+.tabs-title {
+  font-size: 21px; /* Reduced font size for title */
+  font-weight: bold;
+  margin: 0;
+}
+
+.tab-list-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-grow: 1;
+  max-width: 100%;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.tab-list {
+  display: flex;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tab-btn {
+  border: none;
+  padding: 4px;
+  font-size: 14px; /* Smaller font size */
+  cursor: pointer;
+  font-weight: normal;
+  border: transparent;
+  background-color: transparent;
+  outline: none;
+  position: relative;
+  transition: color 0.3s ease;
+  height: 64px;
+  box-shadow: none;
+  font-size: 15px;
+  border-radius: 0;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.25s;
+  color: rgb(123, 123, 123);
+}
+
+.tab-btn:hover {
+  background-color: transparent; /* Hover color for text */
+  color: black;
+}
+
+.tab-btn::after {
+  content: '';
+  display: block;
+  max-width: 80%;
+  height: 2.5px; /* Height of the bottom border */
+  background-color: #5c6ac4; /* Color of the bottom border */
+  position: absolute;
+  bottom: 5px;
+  left: 13%;
+  
+  transition: width 0.3s ease;
+}
+
+.tab-btn:hover::after {
+  width: 100%; /* Full-width underline on hover */
+}
+
+.tab-btn--active {
+  font-weight: bold; /* Bold font for the active tab */
+  color: #5c6ac4; /* Active text color */
+}
+
+.tab-btn--active::after {
+  width: 100%; /* Full underline for active tab */
+}
+
+.right-tab-list-wrapper {
+  display: flex;
+  gap: 10px;
+}
+
+.download-button,
+.upload-button {
+  padding: 8px 12px;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.download-button i,
+.upload-button i {
+  font-size: 18px;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -86,16 +202,6 @@ header {
   position: fixed;
   top: 0;
   left: 0;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-}
-
-.logo img {
-  height: 40px;
-  margin-right: 10px;
 }
 
 img {
@@ -295,13 +401,6 @@ button:hover {
   background-color: #4a3974;
 }
 
-.tab-list-wrapper {
-  display: flex;
-  justify-content: space-between;
-  max-width: 100%;
-  padding: 15px;
-}
-
 .tab-nav {
   overflow-x: scroll;
 }
@@ -312,7 +411,7 @@ button:hover {
 
 .tab-list {
   display: flex;
-  gap: .5em;
+  gap: .4em;
   margin: 0;
   padding: 0;
   color: #888;
@@ -348,7 +447,6 @@ button:hover {
   cursor: pointer;
   font-size: 16px;
   font-weight: bold;
-  min-width: 75px;
   /* Adjust as needed to fit content */
 }
 

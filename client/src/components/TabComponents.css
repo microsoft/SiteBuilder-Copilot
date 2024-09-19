@@ -5,17 +5,35 @@
 
 .tab-list {
   display: flex;
-  list-style-type: none;
+  list-style: none;
   padding: 0;
+  gap: .5em;
+  background-color: white;
+  margin-top: 8px;
 }
 
-.tab-btn {
-  padding: 10px 20px;
-  cursor: pointer;
-  min-width: 75px
-}
+
 
 .tab-btn--active {
   font-weight: bold;
-  border-bottom: 2px solid #000;
+  border-bottom: 3px solid #5B5FC7;
+}
+
+.tab-list-wrapper {
+  display: flex;
+  justify-content: space-between;
+  max-width: 100%;
+  background-color: white;
+}
+
+.tab-nav {
+  overflow-x: scroll;
+}
+
+.tab-list::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-list li {
+  display: block;
 }
