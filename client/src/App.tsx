@@ -100,19 +100,19 @@ function App() {
     }
   };
 
-    const checkAndSetIframeUrl = async (guid: string) => {
+  const checkAndSetIframeUrl = async (guid: string) => {
     try {
-        const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
-        if (!response.ok) {
+      const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
+      if (!response.ok) {
         throw new ResponseError(response.status, response.statusText);
-        }
+      }
 
-        setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
-        populateConversations(guid);
+      setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
+      populateConversations(guid);
     } catch (error) {
-        ErrorHandler.handleError(error, "Failed to load your local index.html file into Website tab.");
+      ErrorHandler.handleError(error, "Failed to load your local index.html file into Website tab.");
     }
-    };
+  };
 
   const hasMounted = useRef(false);
   useEffect(() => {
@@ -258,7 +258,7 @@ function App() {
     const currentSessionId = sessionId || getQueryParam('sessionId');
 
     if (prompt.trim()) {
-      setConversations([...conversations, { prompt, response: { message:'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />', responseSuggestions: [] }}]);
+      setConversations([...conversations, { prompt, response: { message: 'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />', responseSuggestions: [] } }]);
       scrollToLastElement('conversations-container');
       setPrompt('');
       setLoading(true);
@@ -312,7 +312,7 @@ function App() {
     }
   };
 
-  const handleDeleteChat = async() => {
+  const handleDeleteChat = async () => {
     try {
       const response = await fetch(LOCAL_SERVER_BASE_URL + `deletechat/${sessionId}`, {
         method: 'POST',
@@ -334,198 +334,198 @@ function App() {
     const jsonStartIndex = response.indexOf('{');
     const jsonEndIndex = response.lastIndexOf('}') + 1;
 
-      // Reset the state for a new chat session
-      setPrompt('');
-      setConversations([]);
-      setSelectedFile(null);
-      setHtmlSource('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
-      setResponse('{}');
-      setTextToSpeak('');
-    } catch (error) {
-      console.error('Error:', error);
-    }
-    return { message, responseSuggestions };
-  };
+    // Reset the state for a new chat session
+    setPrompt('');
+    setConversations([]);
+    setSelectedFile(null);
+    setHtmlSource('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
+    setResponse('{}');
+    setTextToSpeak('');
+  } catch (error) {
+    console.error('Error:', error);
+  }
+  return { message, responseSuggestions };
+};
 
-  const handleSessionSelectCallback = async (selectedSessionId: string) => {
-    const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${selectedSessionId}`;
-    window.history.replaceState({ path: newUrl }, '', newUrl);
-    setSessionId(selectedSessionId);
-    setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${selectedSessionId}/index.html`);
+const handleSessionSelectCallback = async (selectedSessionId: string) => {
+  const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${selectedSessionId}`;
+  window.history.replaceState({ path: newUrl }, '', newUrl);
+  setSessionId(selectedSessionId);
+  setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${selectedSessionId}/index.html`);
 
-    populateConversations(selectedSessionId);
-  };
+  populateConversations(selectedSessionId);
+};
 
-  const populateConversations = async (sessionId: string) => {
-        try {
+const populateConversations = async (sessionId: string) => {
+  try {
     const response = await fetch(LOCAL_SERVER_BASE_URL + `messages/${sessionId}`);
     const data = await response.json();
-    const messages: Array<{content: string, role: string}> = data["messages"];
-    const promptExchanges: Array<{prompt: string, response: string}> = [];
-    for(let i = 1; i < messages.length - 1; i++) {
-      promptExchanges.push({ prompt: messages[i].content, response: messages[i+1].content });
+    const messages: Array<{ content: string, role: string }> = data["messages"];
+    const promptExchanges: Array<{ prompt: string, response: string }> = [];
+    for (let i = 1; i < messages.length - 1; i++) {
+      promptExchanges.push({ prompt: messages[i].content, response: messages[i + 1].content });
     }
     setConversations(promptExchanges);
     setTimeout(() => {
       goToLastConversation();
     }, 50);
-    } catch (e) {
-        ErrorHandler.handleError(e, 'Failed to retrieve messages from previous chats.');
-    }
-  };
+  } catch (e) {
+    ErrorHandler.handleError(e, 'Failed to retrieve messages from previous chats.');
+  }
+};
 
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      handleSend();
-    }
-  };
+const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    handleSend();
+  }
+};
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      setSelectedFile(event.target.files[0]);
-    }
-  };
+const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  if (event.target.files && event.target.files.length > 0) {
+    setSelectedFile(event.target.files[0]);
+  }
+};
 
-  const handleDownload = () => {
-    const blob = new Blob([htmlSource], { type: 'text/html' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'generated-website.html';
-    link.click();
-  };
+const handleDownload = () => {
+  const blob = new Blob([htmlSource], { type: 'text/html' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'generated-website.html';
+  link.click();
+};
 
-  const handleAzureUpload = async () => {
-    alert("Not implemented yet!");
-    return Promise.resolve(false);
+const handleAzureUpload = async () => {
+  alert("Not implemented yet!");
+  return Promise.resolve(false);
+}
+
+const handleImageUrlSubmit = () => {
+  setPrompt(`![image](${imageUrl})`);
+  setShowUrlInput(false);
+};
+
+const handleSpeechChange = async () => {
+  if (!isMicrophoneAvailable) {
+    return;
   }
 
-  const handleImageUrlSubmit = () => {
-    setPrompt(`![image](${imageUrl})`);
-    setShowUrlInput(false);
-  };
+  if (listening) {
+    await SpeechRecognition.stopListening();
+  } else {
+    await SpeechRecognition.startListening();
+  }
+};
 
-  const handleSpeechChange = async () => {
-    if (!isMicrophoneAvailable) {
-      return;
-    }
+const handleHearingChange = async () => {
+  setCanDoTTS(!canDoTTS);
+  if (speechStatus == "started") {
+    TextToSpeechStop();
+  }
+};
 
-    if (listening) {
-      await SpeechRecognition.stopListening();
-    } else {
-      await SpeechRecognition.startListening();
-    }
-  };
-
-  const handleHearingChange = async () => {
-    setCanDoTTS(!canDoTTS);
-    if (speechStatus == "started") {
-      TextToSpeechStop();
-    }
-  };
-
-  return (
-    <div className="container">
-      <div className="left-column" style={{ width: '100%' }}>
-        <TabList activeTabIndex={0} handleDownload={handleDownload} handleAzureUpload={handleAzureUpload}>
-          <TabItem name="Website">
-            <div className="content-wrapper" style={{ position: 'relative', width: '100%', height: '100%' }}>
-              {loading && (
-                <div className="loading-spinner" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1 }}>
-                  Generating Changes...
-                  <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style={{ width: '20px', height: '20px' }} />
-                </div>
-              )}
-              {iframeUrl ? (
-                <iframe id="generated-content-iframe" src={iframeUrl} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0 }} />
-              ) : (
-                <div id="generated-content" dangerouslySetInnerHTML={{ __html: htmlSource }} style={{ width: '100%', height: '100%' }} />
-              )}
-            </div>
-          </TabItem>
-          <TabItem name="Source">
-            <div id="source-code-content" style={{ width: '100%', height: '100%' }}>
-              <pre>{htmlSource}</pre>
-            </div>
-          </TabItem>
-          <TabItem name="Raw">
-            <div id="raw-response-content" style={{ width: '100%', height: '100%' }}>
-              <pre>{response}</pre>
-            </div>
-          </TabItem>
-        </TabList>
-      </div>
-      <div className="right-column">
-        <ConversationPanel
-          conversations={conversations}
-          sessionHistory={sessionHistory}
-          handleNewChat={async () => { window.location.href = window.location.origin + window.location.pathname; }}
-          handleDeleteChat={handleDeleteChat}
-          selectedSession={sessionId}
-          handleSessionSelectCallback={handleSessionSelectCallback}
-        />
-        <textarea
-          className="scrollable-input"
-          placeholder="Type your prompt here!"
-          value={`${prompt}${transcript}`}
-          onChange={(e) => setPrompt(e.target.value)}
-          onKeyPress={handleKeyPress}
-        ></textarea>
-        {selectedFile && (
-          <div className="selected-file-name">
-            Selected file: {selectedFile.name}
-          </div>
-        )}
-        <div className="button-wrapper" title="Submit">
-          <div className="image-upload-wrapper" title="Add an image">
-            {showUrlInput && (
-              <div className="url-input-box">
-                <small>Add an image</small>
-                <input
-                  type="text"
-                  placeholder="Paste link"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleImageUrlSubmit()}
-                />
+return (
+  <div className="container">
+    <div className="left-column" style={{ width: '100%' }}>
+      <TabList activeTabIndex={0} handleDownload={handleDownload} handleAzureUpload={handleAzureUpload}>
+        <TabItem name="Website">
+          <div className="content-wrapper" style={{ position: 'relative', width: '100%', height: '100%' }}>
+            {loading && (
+              <div className="loading-spinner" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1 }}>
+                Generating Changes...
+                <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style={{ width: '20px', height: '20px' }} />
               </div>
             )}
-            <div className="image-upload-label" onClick={() => setShowUrlInput(!showUrlInput)}>
-              <i className="fas fa-image"></i>
-            </div>
+            {iframeUrl ? (
+              <iframe id="generated-content-iframe" src={iframeUrl} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0 }} />
+            ) : (
+              <div id="generated-content" dangerouslySetInnerHTML={{ __html: htmlSource }} style={{ width: '100%', height: '100%' }} />
+            )}
           </div>
-          <div className="file-input-wrapper" title="Add a file">
-            <input
-              type="file"
-              id="file-input"
-              onChange={handleFileChange}
-              style={{ display: 'none' }}
-            />
-            <label htmlFor="file-input" className="file-input-label">
-              <i className="fas fa-paperclip"></i>
-            </label>
+        </TabItem>
+        <TabItem name="Source">
+          <div id="source-code-content" style={{ width: '100%', height: '100%' }}>
+            <pre>{htmlSource}</pre>
           </div>
-          {browserSupportsSpeechRecognition &&
-            <div className={`generic-button-input-wrapper ${listening ? "generic-button-input-on" : "generic-button-input-off"}`} title="Speak a prompt" onClick={handleSpeechChange}>
-              <span className="speech-input-icon">
-                <i className={`fas fa-microphone ${listening ? "fa-inverse" : ""}`}></i>
-              </span>
-            </div>
-          }
-          <div className={`generic-button-input-wrapper ${canDoTTS ? "generic-button-input-on" : "generic-button-input-off"}`} title="Hear the responses" onClick={handleHearingChange}>
-            <span className="hear-input-icon">
-              <i className={`fas fa-headphones ${canDoTTS ? "fa-inverse" : ""}`}></i>
-            </span>
+        </TabItem>
+        <TabItem name="Raw">
+          <div id="raw-response-content" style={{ width: '100%', height: '100%' }}>
+            <pre>{response}</pre>
           </div>
-          <button className="send-button" onClick={handleSend}>
-            <span className="send-icon">
-              <i className="fas fa-paper-plane"></i>
-            </span>
-          </button>
+        </TabItem>
+      </TabList>
+    </div>
+    <div className="right-column">
+      <ConversationPanel
+        conversations={conversations}
+        sessionHistory={sessionHistory}
+        handleNewChat={async () => { window.location.href = window.location.origin + window.location.pathname; }}
+        handleDeleteChat={handleDeleteChat}
+        selectedSession={sessionId}
+        handleSessionSelectCallback={handleSessionSelectCallback}
+      />
+      <textarea
+        className="scrollable-input"
+        placeholder="Type your prompt here!"
+        value={`${prompt}${transcript}`}
+        onChange={(e) => setPrompt(e.target.value)}
+        onKeyPress={handleKeyPress}
+      ></textarea>
+      {selectedFile && (
+        <div className="selected-file-name">
+          Selected file: {selectedFile.name}
         </div>
+      )}
+      <div className="button-wrapper" title="Submit">
+        <div className="image-upload-wrapper" title="Add an image">
+          {showUrlInput && (
+            <div className="url-input-box">
+              <small>Add an image</small>
+              <input
+                type="text"
+                placeholder="Paste link"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleImageUrlSubmit()}
+              />
+            </div>
+          )}
+          <div className="image-upload-label" onClick={() => setShowUrlInput(!showUrlInput)}>
+            <i className="fas fa-image"></i>
+          </div>
+        </div>
+        <div className="file-input-wrapper" title="Add a file">
+          <input
+            type="file"
+            id="file-input"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+          />
+          <label htmlFor="file-input" className="file-input-label">
+            <i className="fas fa-paperclip"></i>
+          </label>
+        </div>
+        {browserSupportsSpeechRecognition &&
+          <div className={`generic-button-input-wrapper ${listening ? "generic-button-input-on" : "generic-button-input-off"}`} title="Speak a prompt" onClick={handleSpeechChange}>
+            <span className="speech-input-icon">
+              <i className={`fas fa-microphone ${listening ? "fa-inverse" : ""}`}></i>
+            </span>
+          </div>
+        }
+        <div className={`generic-button-input-wrapper ${canDoTTS ? "generic-button-input-on" : "generic-button-input-off"}`} title="Hear the responses" onClick={handleHearingChange}>
+          <span className="hear-input-icon">
+            <i className={`fas fa-headphones ${canDoTTS ? "fa-inverse" : ""}`}></i>
+          </span>
+        </div>
+        <button className="send-button" onClick={handleSend}>
+          <span className="send-icon">
+            <i className="fas fa-paper-plane"></i>
+          </span>
+        </button>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default App;
