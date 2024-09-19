@@ -219,7 +219,7 @@ function App() {
     }, 60000); // 60 seconds timeout
   };
 
-  const handleSend = async () => {
+  const handleSendInternal = async (prompt: string) => {
     const currentSessionId = sessionId || getQueryParam('sessionId');
 
     if (prompt.trim()) {
@@ -278,6 +278,16 @@ function App() {
         console.error('Error:', error);
       }
     }
+  }
+
+  // send handler with prompt set from parameter
+  const handleSendWithPrompt = async (promptParam: string) => {
+    handleSendInternal(promptParam);
+  };
+
+  // send handler with prompt set from state
+  const handleSend = async () => {
+    handleSendInternal(prompt);
   };
 
   const handleDeleteChat = async() => {
@@ -428,6 +438,7 @@ function App() {
           handleDeleteChat={handleDeleteChat}
           selectedSession={sessionId}
           handleSessionSelectCallback={handleSessionSelectCallback}
+          handleSendWithPrompt={handleSendWithPrompt}
         />
         <textarea
           className="scrollable-input"
