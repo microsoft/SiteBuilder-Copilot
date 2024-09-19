@@ -12,12 +12,7 @@
   margin-top: 8px;
 }
 
-.tab-btn {
-  padding: 10px 20px;
-  cursor: pointer;
-  min-width: 75px;
-  border-radius: 0px;
-}
+
 
 .tab-btn--active {
   font-weight: bold;
