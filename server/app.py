@@ -7,8 +7,11 @@ import requests
 import re
 import asyncio
 import json
-from pypdf import PdfReader
+import pypandoc
+import csv
+import openpyxl
 
+from pypdf import PdfReader
 from image_populator import ImagePopulator
 
 app = Flask(__name__)
@@ -273,6 +276,15 @@ def saveAttachment(file, session_id):
 def is_image(file_path):
     return file_path.lower().endswith((".jpg", ".jpeg", ".png", ".gif", ".bmp"))
 
+def is_pdf(file_path):
+    return file_path.lower().endswith("pdf")
+
+def is_document(file_path):
+    return file_path.lower().endswith((".odt", ".docx", ".doc" ".rtf"))
+
+def is_office_spreadsheet(file_path):
+    return file_path.lower().endswith((".xls", ".xlsx"))
+
 def processAttachment(file, session_id):
     upload_dir = os.path.join(get_session_directory(session_id), 'uploads')
     os.makedirs(upload_dir, exist_ok=True)
@@ -291,6 +303,23 @@ def processAttachment(file, session_id):
             with open(text_file_path, 'w') as f:
                 f.write(text)
             file_path = text_file_path
+        elif (is_document(filename)):
+            text = ""
+            original_path = os.path.join(upload_dir, file.filename)
+            file.save(original_path)
+            file_path = original_path + ".txt"
+            pypandoc.convert_file(original_path, 'plain', outputfile=file_path)
+        elif (is_office_spreadsheet(filename)):
+            original_path = os.path.join(upload_dir, file.filename)
+            file.save(original_path)
+            file_path = original_path + ".csv"
+            workbook = openpyxl.load_workbook(original_path)
+            with open(file_path, 'w') as f:
+                out_csv = csv.writer(f)
+                for sheet_name in workbook.sheetnames:
+                    sheet = workbook[sheet_name]
+                    for row in sheet.rows:
+                        out_csv.writerow([cell.value for cell in row])			
         elif is_image(filename):
             print("Upload was an image file, saving image to serve directory.")
             image_dir = get_image_serve_dir(session_id)

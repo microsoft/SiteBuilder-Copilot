@@ -15,6 +15,7 @@ interface ConversationPanelProps {
   handleNewChat: () => Promise<void>;
   handleDeleteChat: () => Promise<void>;
   handleSessionSelectCallback: (sessionId: string) => void;
+  handleSendWithPrompt: (prompt: string) => void;
 }
 
 const ConversationPanel: React.FC<ConversationPanelProps> = ({
@@ -24,11 +25,24 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
   handleNewChat,
   handleDeleteChat,
   handleSessionSelectCallback,
+  handleSendWithPrompt,
 }) => {
 
   const handleSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const sessionId = event.target.value;
     handleSessionSelectCallback(sessionId);
+  }
+
+  const handleSuggestionClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const suggestion = event.currentTarget.textContent;
+    if (suggestion) {
+      handleSendWithPrompt(suggestion);
+      const element = document.getElementById('conversations-container');
+      if (element && element.lastElementChild) {
+        setTimeout(() => {
+          element.parentElement!.lastElementChild?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }    }
   }
 
   const renderContent = (content: string) => {
@@ -47,7 +61,7 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
       return (
         <div className="ai-response-suggestions">
           {aiResponse.responseSuggestions.map((suggestion, index) => (
-              <button key={index} className="response-suggestion">
+              <button key={index} className="response-suggestion" onClick={handleSuggestionClick}>
                 {suggestion}
               </button>
             ))

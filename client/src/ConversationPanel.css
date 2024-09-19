@@ -87,4 +87,9 @@ select:hover, #new-chat-button:hover, #delete-chat-button:hover {
     background-color: #f9f9f9;
     color: #333;
     box-sizing: border-box;
+    cursor: pointer;
+}
+
+.response-suggestion:hover {
+    border-color: #646cff;
 }
