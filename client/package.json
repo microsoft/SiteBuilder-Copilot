@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "react": "^18.3.1",
+    "react-code-blocks": "^0.1.6",
     "react-dom": "^18.3.1",
     "react-speech-recognition": "^3.10.0",
     "react-text-to-speech": "^0.19.2",

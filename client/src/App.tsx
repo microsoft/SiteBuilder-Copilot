@@ -6,6 +6,7 @@ import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognitio
 import { useSpeech } from "react-text-to-speech";
 import { SessionDetails } from './types/SessionTypes';
 import { AiResponse } from './types/ConversationTypes';
+import { CodeBlock, dracula } from "react-code-blocks";
 
 import './App.css';
 import { ErrorHandler, NetworkError, ResponseError } from './ErrorHandler';
@@ -467,8 +468,8 @@ function App() {
             )}
           </TabItem>
           <TabItem name="Source">
-            <div id="source-code-content" style={{ width: '100%', height: '100%' }}>
-              <pre>{htmlSource}</pre>
+            <div id="source-code-content">
+              <CodeBlock language="html" theme={dracula} text={htmlSource} />
             </div>
           </TabItem>
           <TabItem name="Raw">
