@@ -313,7 +313,7 @@ def processAttachment(file, session_id):
             original_path = os.path.join(upload_dir, file.filename)
             file.save(original_path)
             file_path = original_path + ".csv"
-            workbook = openpyxl.load_workbook(original_path)
+            workbook = openpyxl.load_workbook(original_path, data_only=True)
             with open(file_path, 'w') as f:
                 out_csv = csv.writer(f)
                 for sheet_name in workbook.sheetnames:
