@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ConversationPanel from './ConversationPanel';
 import { TabItem, TabList } from './components/TabComponents';
 import 'regenerator-runtime/runtime';
@@ -8,6 +8,7 @@ import { SessionDetails } from './types/SessionTypes';
 import { AiResponse } from './types/ConversationTypes';
 
 import './App.css';
+import { ErrorHandler, NetworkError, ResponseError } from './ErrorHandler';
 
 const LOCAL_SERVER_BASE_URL = 'http://127.0.0.1:5000/';
 const generateGUID = () => {
@@ -47,8 +48,8 @@ function App() {
   const [textToSpeak, setTextToSpeak] = useState<string>('');
   const {
     speechStatus,
-    start : TextToSpeechStart,
-    stop : TextToSpeechStop
+    start: TextToSpeechStart,
+    stop: TextToSpeechStop
   } = useSpeech({
     text: textToSpeak,
     voiceURI: "Microsoft Libby Online (Natural) - English (United Kingdom)",
@@ -59,14 +60,14 @@ function App() {
       }
     }
   });
-  
+
   useEffect(() => {
     if (textToSpeak.length == 0) {
       return;
     }
 
     TextToSpeechStart();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [textToSpeak]);
 
   useEffect(() => {
@@ -83,9 +84,9 @@ function App() {
       return newPrompt;
     });
     resetTranscript();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finalTranscript]);
-  
+
   const checkAndSetIframeUrl = async (guid: string) => {
     const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
     if (response.status === 200) {
@@ -98,42 +99,55 @@ function App() {
       setSessionId(guid);
     }
   };
-  
+
+  const hasMounted = useRef(false);
   useEffect(() => {
-    let guid = getQueryParam('sessionId');
-    if (guid) {
-      checkAndSetIframeUrl(guid);
-      setSessionId(guid);
-    } else {
-      guid = generateGUID();
-      const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
-      window.history.replaceState({ path: newUrl }, '', newUrl);
-      setSessionId(guid);
+    if (!hasMounted.current) {
+
+      hasMounted.current = true;
+
+      let guid = getQueryParam('sessionId');
+      if (guid) {
+        checkAndSetIframeUrl(guid);
+        setSessionId(guid);
+      } else {
+        guid = generateGUID();
+        const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
+        window.history.replaceState({ path: newUrl }, '', newUrl);
+        setSessionId(guid);
+      }
+
+      fetchSessionHistory();
     }
-
-    fetchSessionHistory();
   }, []);
-
 
   const fetchSessionHistory = async () => {
     try {
       const response = await fetch(LOCAL_SERVER_BASE_URL + `sessionhistory`);
+      if (!response.ok) {
+        throw new ResponseError(response.status, response.statusText);
+      }
       const data = await response.json();
       setSessionHistory(data);
     } catch (error) {
-      console.error('Error:', error);
+      ErrorHandler.handleError(error, "Failed to fetch session history.");
     }
-  }
+  };
 
   useEffect(() => {
-    async function doFetchSource(url: string) {
-      const sourceCodeResponse = await fetch(url);
-      if (sourceCodeResponse.ok) {
-        setHtmlSource(await sourceCodeResponse.text());
+    try {
+      async function doFetchSource(url: string) {
+
+        const sourceCodeResponse = await fetch(url);
+        if (sourceCodeResponse.ok) {
+          setHtmlSource(await sourceCodeResponse.text());
+        }
       }
-    }
-    if (iframeUrl) {
-      doFetchSource(iframeUrl);
+      if (iframeUrl) {
+        doFetchSource(iframeUrl);
+      }
+    } catch (e) {
+      ErrorHandler.handleError(e, "Failed to load your local index.html file into Source tab.");
     }
   }, [iframeUrl])
 
@@ -159,18 +173,25 @@ function App() {
         const response = await fetch(LOCAL_SERVER_BASE_URL + `image_readycheck/${sessionId}`, {
           method: 'GET',
         });
+
+        // Check if the response is not OK and throw a custom error
+        if (!response.ok) {
+          throw new ResponseError(response.status, response.statusText);
+        }
+
         const data = await response.json();
         if (data.images_ready) {
-            clearInterval(intervalId);
-            setTimeout(() => {
-              setIframeUrl( `${iframeUrl}?t=${new Date().getTime()}`);
-            }, 1000);
+          clearInterval(intervalId);
+          setTimeout(() => {
+            setIframeUrl(`${iframeUrl}?t=${new Date().getTime()}`);
+          }, 1000);
         }
       } catch (error) {
-        console.error('Error:', error);
+        ErrorHandler.handleError(error, "Failing to get an image response from Dalle server.");
       }
     }, 1000);
 
+    // Set a timeout to stop polling after 2 minutes
     setTimeout(() => {
       clearInterval(intervalId);
     }, 60000 * 2); // 2 minutes
@@ -210,7 +231,7 @@ function App() {
           pollForImages(sessionId, data.templateurl);
         }
       } catch (error) {
-        console.error('Error:', error);
+        ErrorHandler.handleError(error, "Failing to get an html response from ChatGPT server.");
       }
     }, 1000);
 
@@ -223,7 +244,7 @@ function App() {
     const currentSessionId = sessionId || getQueryParam('sessionId');
 
     if (prompt.trim()) {
-      setConversations([...conversations, { prompt, response: { message:'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />', responseSuggestions: [] }}]);
+      setConversations([...conversations, { prompt, response: { message: 'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />', responseSuggestions: [] } }]);
       scrollToLastElement('conversations-container');
       setPrompt('');
       setLoading(true);
@@ -241,7 +262,7 @@ function App() {
         });
 
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          throw new NetworkError('Failed to send prompt');
         }
 
         const data = await response.json();
@@ -275,24 +296,25 @@ function App() {
 
         setSelectedFile(null);
       } catch (error) {
-        console.error('Error:', error);
+        ErrorHandler.handleError(error, 'Failed to receive reply to your prompt.');
       }
     }
   };
 
-  const handleDeleteChat = async() => {
+  const handleDeleteChat = async () => {
     try {
       const response = await fetch(LOCAL_SERVER_BASE_URL + `deletechat/${sessionId}`, {
         method: 'POST',
       });
-      if(!response.ok) {
-        throw new Error('Network response was not ok');
+
+      if (!response.ok) {
+        throw new NetworkError('Network response to new chat was not okay.');
       }
       else {
         window.location.reload();
       }
     } catch (error) {
-      console.error('Error:', error);
+      ErrorHandler.handleError(error, 'Failed to delete chat.');
     }
   };
 
@@ -309,7 +331,7 @@ function App() {
         responseSuggestions = JSON.parse(jsonString).choices;
 
       } catch (error) {
-        console.error('Failed to parse JSON:', error);
+        ErrorHandler.handleError(error, 'Failed to parse JSON while making ai multi-option response.');
       }
     }
     return { message, responseSuggestions };
@@ -325,18 +347,22 @@ function App() {
   };
 
   const populateConversations = async (sessionId: string) => {
-    const response = await fetch(LOCAL_SERVER_BASE_URL + `messages/${sessionId}`);
-    const data = await response.json();
-    const messages: Array<{content: string, role: string}> = data["messages"];
-    const promptExchanges: Array<{prompt: string, response: AiResponse}> = [];
-    for(let i = 1; i < messages.length - 1; i += 2) {
-      const aiResponse = parseAiResponseWithOptions(messages[i+1].content);
-      promptExchanges.push({ prompt: messages[i].content, response: aiResponse });
+    try {
+      const response = await fetch(LOCAL_SERVER_BASE_URL + `messages/${sessionId}`);
+      const data = await response.json();
+      const messages: Array<{ content: string, role: string }> = data["messages"];
+      const promptExchanges: Array<{ prompt: string, response: AiResponse }> = [];
+      for (let i = 1; i < messages.length - 1; i += 2) {
+        const aiResponse = parseAiResponseWithOptions(messages[i + 1].content);
+        promptExchanges.push({ prompt: messages[i].content, response: aiResponse });
+      }
+      setConversations(promptExchanges);
+      setTimeout(() => {
+        goToLastConversation();
+      }, 50);
+    } catch (e) {
+      ErrorHandler.handleError(e, 'Failed to retrieve messages from previous chats.');
     }
-    setConversations(promptExchanges);
-    setTimeout(() => {
-      goToLastConversation();
-    }, 50);
   };
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -442,7 +468,7 @@ function App() {
           </div>
         )}
         <div className="button-wrapper" title="Submit">
-        <div className="image-upload-wrapper" title="Add an image">
+          <div className="image-upload-wrapper" title="Add an image">
             {showUrlInput && (
               <div className="url-input-box">
                 <small>Add an image</small>
@@ -470,12 +496,12 @@ function App() {
               <i className="fas fa-paperclip"></i>
             </label>
           </div>
-          { browserSupportsSpeechRecognition &&
-          <div className={`generic-button-input-wrapper ${listening ? "generic-button-input-on" : "generic-button-input-off"}`} title="Speak a prompt" onClick={handleSpeechChange}>
-            <span className="speech-input-icon">
-              <i className={`fas fa-microphone ${listening ? "fa-inverse" : ""}`}></i>
-            </span>
-          </div>
+          {browserSupportsSpeechRecognition &&
+            <div className={`generic-button-input-wrapper ${listening ? "generic-button-input-on" : "generic-button-input-off"}`} title="Speak a prompt" onClick={handleSpeechChange}>
+              <span className="speech-input-icon">
+                <i className={`fas fa-microphone ${listening ? "fa-inverse" : ""}`}></i>
+              </span>
+            </div>
           }
           <div className={`generic-button-input-wrapper ${canDoTTS ? "generic-button-input-on" : "generic-button-input-off"}`} title="Hear the responses" onClick={handleHearingChange}>
             <span className="hear-input-icon">
@@ -486,7 +512,7 @@ function App() {
             <span className="send-icon">
               <i className="fas fa-paper-plane"></i>
             </span>
-          </button>          
+          </button>
         </div>
       </div>
     </div>
