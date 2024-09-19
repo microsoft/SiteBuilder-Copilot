@@ -12,7 +12,9 @@ select {
     cursor: pointer;
 }
 
-select:hover, #new-chat-button:hover, #delete-chat-button:hover {
+select:hover,
+#new-chat-button:hover,
+#delete-chat-button:hover {
     border-color: #646cff;
 }
 
@@ -25,7 +27,8 @@ select:hover, #new-chat-button:hover, #delete-chat-button:hover {
     display: flex;
 }
 
-#new-chat-button, #delete-chat-button {
+#new-chat-button,
+#delete-chat-button {
     cursor: pointer;
     display: inline-block;
     padding: 10px;
@@ -41,12 +44,14 @@ select:hover, #new-chat-button:hover, #delete-chat-button:hover {
     font-weight: bold;
 }
 
-#new-chat-button:hover , #delete-chat-button:hover {
+#new-chat-button:hover,
+#delete-chat-button:hover {
     transform: none;
     background-color: #e0e0e0;
-  }
+}
 
-#new-chat-button-wrapper, #delete-chat-button-wrapper {
+#new-chat-button-wrapper,
+#delete-chat-button-wrapper {
     height: 50px;
 }
 
@@ -57,14 +62,15 @@ select:hover, #new-chat-button:hover, #delete-chat-button:hover {
 #conversation {
     display: flex;
     flex-direction: column;
-    height: 100vh; /* Full height of the viewport */
+    height: 100vh;
+    /* Full height of the viewport */
 }
-  
+
 #conversation-header {
     position: sticky;
     top: 0;
     background-color: white;
-    z-index: 1000; 
+    z-index: 1000;
     margin-bottom: 10px;
 }
 
@@ -77,22 +83,23 @@ select:hover, #new-chat-button:hover, #delete-chat-button:hover {
 }
 
 .ai-response-suggestions {
-padding-left: 3px;
+    padding-left: 2.5px;
 }
 
 .response-suggestion {
     font-family: inherit;
-    padding: 5px;
-    margin-right: 6px;
+    padding: 4px;
+    padding-bottom: 5.5px;
+    margin-right: 5px;
     margin-top: 2px;
     margin-bottom: 4px;
     font-size: 14px;
-    font-weight: normal;
+    font-weight:700;
     user-select: text;
-    border-radius: 5px;
+    border-radius: 9px;
 }
 
-.file-attachment-label{
+.file-attachment-label {
     font-family: inherit;
     font-size: 12px;
     font-weight: 400;
