@@ -249,10 +249,24 @@ function App() {
     }, 60000); // 60 seconds timeout
   };
 
+  const isImage = (fileName: string): boolean => {
+    const fileExtension = (fileName.split('.').pop() || '').toLowerCase();
+    return ['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExtension);
+  };
+  
+
   const handleSendInternal = async (prompt: string) => {
     const currentSessionId = sessionId || getQueryParam('sessionId');
 
     if (prompt.trim()) {
+      if (selectedFile) {
+        if (isImage(selectedFile.name)) {
+          prompt = `${prompt} ![User Image Upload](http://127.0.0.1:5000/${currentSessionId}/template/img/${selectedFile.name})`
+        } else {
+          prompt = `${prompt} ![File Uploaded](${selectedFile.name})`
+        }
+      }
+      
       setConversations([...conversations, { prompt, response: { message: 'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />', responseSuggestions: [] } }]);
       scrollToLastElement('conversations-container');
       setPrompt('');
@@ -262,9 +276,10 @@ function App() {
         const formData = new FormData();
         formData.append('prompt', prompt);
         if (selectedFile) {
-          formData.append('file', selectedFile);
-        }
-
+            formData.append('file', selectedFile);
+            formData.append('prompt', prompt);
+        } 
+        
         const response = await fetch(LOCAL_SERVER_BASE_URL + `sendprompt/${currentSessionId}`, {
           method: 'POST',
           body: formData,
