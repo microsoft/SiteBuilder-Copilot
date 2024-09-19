@@ -294,39 +294,10 @@ button:hover {
   background-color: #4a3974;
 }
 
-.tab-list-wrapper {
-  display: flex;
-  justify-content: space-between;
-  max-width: 100%;
-  padding: 15px;
-}
-
-.tab-nav {
-  overflow-x: scroll;
-}
-
-.tab-list::-webkit-scrollbar {
-  display: none;
-}
-
-.tab-list {
-  display: flex;
-  gap: .5em;
-  margin: 0;
-  padding: 0;
-  color: #888;
-  list-style: none;
-  /* Ensure no bullet points */
-}
-
-.tab-list li {
-  display: block;
-  margin-bottom: -2px;
-}
-
 .right-tab-list-wrapper {
   display: flex;
   gap: 5px;
+  margin: 5px
 }
 
 .download-button-wrapper,

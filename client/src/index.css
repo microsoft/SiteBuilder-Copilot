@@ -28,7 +28,6 @@ h1 {
 }
 
 .tab-btn {
-  border-radius: 5px;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
@@ -40,10 +39,7 @@ h1 {
   border-color: #646cff;
   background-color: #c2c2c2;
 }
-.tab-btn:focus,
-.tab-btn:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
+
 :root {
   color: #213547;
   background-color: #ffffff;
