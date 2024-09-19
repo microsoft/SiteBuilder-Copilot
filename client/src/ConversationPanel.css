@@ -1,13 +1,13 @@
 select {
     font-family: inherit;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 400;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
     background-color: #f9f9f9;
     color: #333;
-    width: 19vw;
+    width: 12vw;
     box-sizing: border-box;
     cursor: pointer;
 }
@@ -18,13 +18,17 @@ select:hover, #new-chat-button:hover, #delete-chat-button:hover {
 
 .conversation-header {
     display: flex;
+    justify-content: space-between;
+}
+
+#conversation-header-buttons {
+    display: flex;
 }
 
 #new-chat-button, #delete-chat-button {
     cursor: pointer;
     width: 50px;
     height: 50px;
-    margin-right: 5px;
     border-radius: 4px;
     padding: 8px;
     border: 1px solid #ccc;
@@ -49,12 +53,15 @@ select:hover, #new-chat-button:hover, #delete-chat-button:hover {
     top: 0;
     background-color: white;
     z-index: 1000; 
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 
 #conversations-container {
     flex: 1;
     overflow-y: auto;
+    padding-top: 10px;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
 }
 
 .response-suggestion {
