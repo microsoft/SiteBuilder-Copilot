@@ -53,7 +53,7 @@ class ImagePopulator:
         soup = BeautifulSoup(html_content, 'html.parser')
         print("Parsed HTML content with BeautifulSoup.")
 
-        placeholder_src = "/img/placeholder.jpg"
+        placeholder_src = "/img/loading_gradient.gif"
         placeholders = []
 
         # Find all <img> tags with src=placeholder_src

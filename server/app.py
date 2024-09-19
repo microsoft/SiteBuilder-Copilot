@@ -160,6 +160,10 @@ def serve_html_template(session_id, filename):
 def serve_placeholder_image():
     return send_from_directory(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets'), 'placeholder.jpg')
 
+@app.route('/img/loading_gradient.gif', methods=['GET'])
+def serve_gradient_image():
+    return send_from_directory(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets'), 'loading_gradient.gif')
+
 @app.route('/<sessionid>/template/img/<filename>')
 def serve_image(sessionid, filename):
     directory = os.path.join(get_session_directory(sessionid), 'template', 'img')

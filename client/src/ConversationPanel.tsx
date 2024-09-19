@@ -73,12 +73,16 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
 
 
   const parseFiles = (message: string) => {
-    const imageRegex = /!\[.*?\]\((.*?)\)/g;
-    return message.replace(imageRegex, (_match, url) => {
-      const fileName = url.split('/').pop();
-      return `<br/><br/><span class='file-attachment-label'><i class="fa fa-file"></i>&nbsp; ${fileName}</span>`;
+    const userImageUploadRegex = /!\[User Image Upload\]\(http:\/\/127\.0\.0\.1:5000\/[^/]+\/template\/img\/[^)]+\)/g;
+    const fileUploadRegex = /!\[File Uploaded\]\([^)]+\)/g;
+    const combinedRegex = new RegExp(`${userImageUploadRegex.source}|${fileUploadRegex.source}`, 'g');
+
+    return message.replace(combinedRegex, (match) => {
+        const url = match.match(/\(([^)]+)\)/)?.[1];
+        const fileName = url?.split('/').pop();
+        return `<br/><br/><span class='file-attachment-label'><i class="fa fa-file"></i>&nbsp; ${fileName}</span>`;
     });
-  };
+};
 
   return (
     <div id="conversation" className="conversations">
