@@ -157,7 +157,6 @@ h3 {
   outline: none;
   padding: 10px;
   box-sizing: border-box;
-  font-size: 22px;
 }
 
 #non-send-buttons {
@@ -341,7 +340,15 @@ button:hover {
 
 .chat-visibility-button {
   cursor: pointer;
-  padding: 10px;
+  padding: 10px 20px;
+  background-color: #65558F;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  min-width: 30px;
 }
 
 .chat-visibility-button:hover {

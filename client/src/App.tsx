@@ -487,7 +487,7 @@ function App() {
                     <div className="welcome-message">
                       <img src="/copilot.svg" alt="Logo" className="main-logo" />
                       <h2>Welcome to SiteBuilder! We're glad you're here.</h2>
-                      <p>From prompt to fully functional purchasable websites in a few clicks</p>
+                      <p>From prompt to fully functional websites in a few clicks</p>
                       <h2 className='sub-header'>Make me a website for:</h2>
                       <div className="button-grid">
                         <button onClick={() => handleClick('A Videogame')}>
