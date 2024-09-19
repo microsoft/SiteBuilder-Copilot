@@ -1,10 +1,11 @@
 import React from "react";
 import './ConversationPanel.css';
 import { SessionDetails } from './types/SessionTypes';
+import { AiResponse } from "./types/ConversationTypes";
 
 interface Conversation {
   prompt: string;
-  response: string;
+  response: AiResponse;
 }
 
 interface ConversationPanelProps {
@@ -12,6 +13,7 @@ interface ConversationPanelProps {
   sessionHistory: SessionDetails[];
   selectedSession: string;
   handleNewChat: () => Promise<void>;
+  handleDeleteChat: () => Promise<void>;
   handleSessionSelectCallback: (sessionId: string) => void;
 }
 
@@ -20,6 +22,7 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
   sessionHistory,
   selectedSession,
   handleNewChat,
+  handleDeleteChat,
   handleSessionSelectCallback,
 }) => {
 
@@ -37,6 +40,23 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
     return <div dangerouslySetInnerHTML={{ __html: content }} />;
   }
 
+  const renderResponseSuggestions = (aiResponse: AiResponse) => {
+    if (!aiResponse.responseSuggestions.length) {
+      return null;
+    } else {
+      return (
+        <div className="ai-response-suggestions">
+          {aiResponse.responseSuggestions.map((suggestion, index) => (
+              <button key={index} className="response-suggestion">
+                {suggestion}
+              </button>
+            ))
+          }
+        </div>
+      );
+    }
+  };
+
   return (
     <div id="conversation" className="conversations">
       <div id="conversation-header" className="conversation-header">
@@ -50,11 +70,26 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
             </svg>
           </button>
         </div>
+        <div id="delete-chat-button-wrapper" style={{ display: 'flex', alignItems: 'center' }}>
+          <button
+            id="delete-chat-button"
+            title="Delete this chat"
+            onClick={async () => await handleDeleteChat()}>
+            <svg fill="none" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 11V17" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M14 11V17" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M4 7H20" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M6 7H12H18V18C18 19.6569 16.6569 21 15 21H9C7.34315 21 6 19.6569 6 18V7Z" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5V7H9V5Z" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />            </svg>
+          </button>
+        </div>
         {sessionHistory &&
           <select id="session-history" onChange={handleSelect} value={sessionHistory.find((detail) => selectedSession === detail.sessionId) ? selectedSession : "DEFAULT"}>
             <option value="DEFAULT" disabled>Select a previous chat</option>
             {sessionHistory.map((sessionDetails) => (
-              <option key={sessionDetails.sessionId} value={sessionDetails.sessionId}>{sessionDetails.title}</option>
+              <option key={sessionDetails.sessionId} value={sessionDetails.sessionId}>
+                {sessionDetails.title || sessionDetails.sessionId}
+              </option>
             ))}
           </select>
         }
@@ -66,10 +101,13 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
               <div className="submitted-prompt">
                 {renderContent(conversation.prompt)}
               </div>
-              <div
-                className="ai-response"
-                dangerouslySetInnerHTML={{ __html: '<b>Copilot:</b> ' + conversation.response }}
-              />
+              <div id="ai-response-container">
+                <div
+                  className="ai-response"
+                  dangerouslySetInnerHTML={{ __html: '<b>Copilot:</b> ' + conversation.response.message }}
+                />
+                {renderResponseSuggestions(conversation.response)}
+              </div>
             </div>
           ))}
       </div>

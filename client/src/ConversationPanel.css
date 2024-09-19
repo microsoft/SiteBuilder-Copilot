@@ -12,7 +12,7 @@ select {
     cursor: pointer;
 }
 
-select:hover, #new-chat-button:hover {
+select:hover, #new-chat-button:hover, #delete-chat-button:hover {
     border-color: #646cff;
 }
 
@@ -20,7 +20,7 @@ select:hover, #new-chat-button:hover {
     display: flex;
 }
 
-#new-chat-button {
+#new-chat-button, #delete-chat-button {
     cursor: pointer;
     width: 50px;
     height: 50px;
@@ -30,28 +30,42 @@ select:hover, #new-chat-button:hover {
     border: 1px solid #ccc;
 }
 
-#new-chat-button-wrapper {
+#new-chat-button-wrapper, #delete-chat-button-wrapper {
     height: 50px;
 }
 
 #session-history {
     height: 50px
 }
+
 #conversation {
     display: flex;
     flex-direction: column;
     height: 100vh; /* Full height of the viewport */
-  }
+}
   
-  #conversation-header {
+#conversation-header {
     position: sticky;
     top: 0;
     background-color: white;
     z-index: 1000; 
     margin-bottom: 5px;
-  }
-  
-  #conversations-container {
+}
+
+#conversations-container {
     flex: 1;
     overflow-y: auto;
-  }
+}
+
+.response-suggestion {
+    font-family: inherit;
+    padding: 4px;
+    margin-right: 6px;
+    margin-top: 2px;
+    margin-bottom: 4px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    user-select: text;
+}

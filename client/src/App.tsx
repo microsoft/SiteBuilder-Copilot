@@ -5,6 +5,8 @@ import 'regenerator-runtime/runtime';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useSpeech } from "react-text-to-speech";
 import { SessionDetails } from './types/SessionTypes';
+import { AiResponse } from './types/ConversationTypes';
+
 import './App.css';
 import { ErrorHandler, NetworkError, ResponseError } from './ErrorHandler';
 
@@ -24,7 +26,7 @@ const getQueryParam = (name: string) => {
 
 function App() {
   const [prompt, setPrompt] = useState('');
-  const [conversations, setConversations] = useState<{ prompt: string, response: string }[]>([]);
+  const [conversations, setConversations] = useState<{ prompt: string, response: AiResponse }[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
   const [htmlSource, setHtmlSource] = useState<string>('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
@@ -85,24 +87,38 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finalTranscript]);
 
+  const checkAndSetIframeUrl = async (guid: string) => {
+    const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
+    if (response.status === 200) {
+      setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
+      populateConversations(guid);
+    } else {
+      guid = generateGUID();
+      const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?sessionId=${guid}`;
+      window.history.replaceState({ path: newUrl }, '', newUrl);
+      setSessionId(guid);
+    }
+  };
+
+    const checkAndSetIframeUrl = async (guid: string) => {
+    try {
+        const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
+        if (!response.ok) {
+        throw new ResponseError(response.status, response.statusText);
+        }
+
+        setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
+        populateConversations(guid);
+    } catch (error) {
+        ErrorHandler.handleError(error, "Failed to load your local index.html file into Website tab.");
+    }
+    };
+
   const hasMounted = useRef(false);
   useEffect(() => {
     if (!hasMounted.current) {
 
       hasMounted.current = true;
-      const checkAndSetIframeUrl = async (guid: string) => {
-        try {
-          const response = await fetch(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
-          if (!response.ok) {
-            throw new ResponseError(response.status, response.statusText);
-          }
-
-          setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${guid}/index.html`);
-          populateConversations(guid);
-        } catch (error) {
-          ErrorHandler.handleError(error, "Failed to load your local index.html file into Website tab.");
-        }
-      };
 
       let guid = getQueryParam('sessionId');
       if (guid) {
@@ -242,7 +258,7 @@ function App() {
     const currentSessionId = sessionId || getQueryParam('sessionId');
 
     if (prompt.trim()) {
-      setConversations([...conversations, { prompt, response: 'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />' }]);
+      setConversations([...conversations, { prompt, response: { message:'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />', responseSuggestions: [] }}]);
       scrollToLastElement('conversations-container');
       setPrompt('');
       setLoading(true);
@@ -264,10 +280,10 @@ function App() {
         }
 
         const data = await response.json();
-        const aiResponse = data.response;
+        const aiResponse = parseAiResponseWithOptions(data.response);
 
         if (canDoTTS) {
-          setTextToSpeak(aiResponse);
+          setTextToSpeak(aiResponse.message);
         }
 
         setConversations((prevConversations) =>
@@ -296,15 +312,27 @@ function App() {
     }
   };
 
-  const handleNewChat = async () => {
+  const handleDeleteChat = async() => {
     try {
-      const response = await fetch(LOCAL_SERVER_BASE_URL + `newchat/${sessionId}`, {
+      const response = await fetch(LOCAL_SERVER_BASE_URL + `deletechat/${sessionId}`, {
         method: 'POST',
       });
 
       if (!response.ok) {
-        throw new NetworkError("Network response to new chat was not okay.");
+        throw new NetworkError('Network response to new chat was not okay.');
       }
+      else {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const parseAiResponseWithOptions = (response: string): AiResponse => {
+    console.log(response)
+    const jsonStartIndex = response.indexOf('{');
+    const jsonEndIndex = response.lastIndexOf('}') + 1;
 
       // Reset the state for a new chat session
       setPrompt('');
@@ -314,8 +342,9 @@ function App() {
       setResponse('{}');
       setTextToSpeak('');
     } catch (error) {
-      ErrorHandler.handleError(error, 'Failed to create new chat.');
+      console.error('Error:', error);
     }
+    return { message, responseSuggestions };
   };
 
   const handleSessionSelectCallback = async (selectedSessionId: string) => {
@@ -328,20 +357,20 @@ function App() {
   };
 
   const populateConversations = async (sessionId: string) => {
-    try {
-      const response = await fetch(LOCAL_SERVER_BASE_URL + `messages/${sessionId}`);
-      const data = await response.json();
-      const messages: Array<{ content: string, role: string }> = data["messages"];
-      const promptExchanges: Array<{ prompt: string, response: string }> = [];
-      for (let i = 1; i < messages.length - 1; i++) {
-        promptExchanges.push({ prompt: messages[i].content, response: messages[i + 1].content });
-      }
-      setConversations(promptExchanges);
-      setTimeout(() => {
-        goToLastConversation();
-      }, 50);
+        try {
+    const response = await fetch(LOCAL_SERVER_BASE_URL + `messages/${sessionId}`);
+    const data = await response.json();
+    const messages: Array<{content: string, role: string}> = data["messages"];
+    const promptExchanges: Array<{prompt: string, response: string}> = [];
+    for(let i = 1; i < messages.length - 1; i++) {
+      promptExchanges.push({ prompt: messages[i].content, response: messages[i+1].content });
+    }
+    setConversations(promptExchanges);
+    setTimeout(() => {
+      goToLastConversation();
+    }, 50);
     } catch (e) {
-      ErrorHandler.handleError(e, 'Failed to retrieve messages from previous chats.');
+        ErrorHandler.handleError(e, 'Failed to retrieve messages from previous chats.');
     }
   };
 
@@ -430,7 +459,8 @@ function App() {
         <ConversationPanel
           conversations={conversations}
           sessionHistory={sessionHistory}
-          handleNewChat={handleNewChat}
+          handleNewChat={async () => { window.location.href = window.location.origin + window.location.pathname; }}
+          handleDeleteChat={handleDeleteChat}
           selectedSession={sessionId}
           handleSessionSelectCallback={handleSessionSelectCallback}
         />

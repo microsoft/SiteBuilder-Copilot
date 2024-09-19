@@ -7,6 +7,7 @@ import requests
 import re
 import asyncio
 import json
+from pypdf import PdfReader
 
 from image_populator import ImagePopulator
 
@@ -96,8 +97,9 @@ async def get_output(sessionId):
 def image_ready_check(sessionId):
     session_dir = get_session_directory(sessionId)
     img_dir = os.path.join(session_dir, 'template', 'img')
+    lock_file = os.path.join(img_dir, 'images.lock')
     
-    if os.path.exists(img_dir) and os.listdir(img_dir):
+    if os.path.exists(img_dir) and os.listdir(img_dir) and not os.path.exists(lock_file):
         return jsonify({"images_ready": True}), 200
     else:
         return jsonify({"images_ready": False}), 200
@@ -134,7 +136,7 @@ def process_details(prompt, file_content, sessionId, agent):
 def process_images(sessionId):
     html_path = os.path.join(get_session_directory(sessionId), 'template', 'index.html')
     img_output_path = os.path.join(get_session_directory(sessionId), 'template', 'img')
-    image_populator = ImagePopulator(html_path=html_path, image_output_folder=img_output_path, session_id=sessionId)
+    image_populator = ImagePopulator(html_path=html_path, image_output_folder=img_output_path, session_id=sessionId, agents=agent_factory.get_or_create_agents(sessionId))
     image_populator.process()
 
 @app.route("/jobs/<session_id>/<filename>", methods=["GET"])
@@ -251,15 +253,33 @@ def delete_chat(sessionId):
         return jsonify({'error': str(e)}), 500
 
 def saveAttachment(file, session_id):
-    upload_dir = os.path.join(get_session_directory(session_id), 'uploads')
-    os.makedirs(upload_dir, exist_ok=True)
-    file_path = os.path.join(upload_dir, file.filename)
-    file.save(file_path)
-    
+    file_path = processAttachment(file, session_id)
     with open(file_path, 'rb') as f:
         file_content = f.read()
     
     return file_content
+
+def processAttachment(file, session_id):
+    upload_dir = os.path.join(get_session_directory(session_id), 'uploads')
+    os.makedirs(upload_dir, exist_ok=True)
+    file_path = ""
+    try:
+        file_path = os.path.join(upload_dir, file.filename)
+        file.save(file_path)
+
+        filename = file.filename.lower()
+        if (filename.endswith(".pdf")):
+            text = ""
+            reader = PdfReader(file_path)
+            for p in reader.pages:
+                text += p.extract_text() + "\n"
+            
+            file_path += ".txt"
+            with open(file_path, 'w') as f:
+                f.write(text)         
+    except Exception as e:
+        print(e)
+    return file_path
 
 def saveTemplate(html_content, session_id):
     """
