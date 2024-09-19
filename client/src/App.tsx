@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { renderToString } from 'react-dom/server';
 import ConversationPanel from './ConversationPanel';
 import { TabItem, TabList } from './components/TabComponents';
 import 'regenerator-runtime/runtime';
@@ -7,6 +6,7 @@ import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognitio
 import { useSpeech } from "react-text-to-speech";
 import { SessionDetails } from './types/SessionTypes';
 import { AiResponse } from './types/ConversationTypes';
+import { CodeBlock, dracula } from "react-code-blocks";
 
 import './App.css';
 import { ErrorHandler, NetworkError, ResponseError } from './ErrorHandler';
@@ -39,67 +39,6 @@ function App() {
     console.log("Button clicked with prompt: ", newPrompt);
     setPrompt(newPrompt); // Set the new prompt
     setShouldSendPrompt(true); // Trigger sending
-  };
-
-  const handleSend = async () => {
-    const currentSessionId = sessionId || getQueryParam('sessionId');
-
-    if (prompt.trim()) {
-      setConversations([...conversations, { prompt, response: { message: 'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />', responseSuggestions: [] } }]);
-      scrollToLastElement('conversations-container');
-      setPrompt('');
-      setLoading(true);
-
-      try {
-        const formData = new FormData();
-        formData.append('prompt', prompt);
-        if (selectedFile) {
-          formData.append('file', selectedFile);
-        }
-
-        const response = await fetch(LOCAL_SERVER_BASE_URL + `sendprompt/${currentSessionId}`, {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new NetworkError('Failed to send prompt');
-        }
-
-        const data = await response.json();
-        const aiResponse = parseAiResponseWithOptions(data.response);
-
-        // const imageData = await fetchImageData(`${LOCAL_SERVER_BASE_URL}/getimage/${sessionId}`);
-        // console.log(imageData);
-
-        if (canDoTTS) {
-          setTextToSpeak(aiResponse.message);
-        }
-
-        setConversations((prevConversations) =>
-          prevConversations.map((conv, index) =>
-            index === prevConversations.length - 1
-              ? { ...conv, response: aiResponse }
-              : conv
-          )
-        );
-        scrollToLastElement('conversations-container');
-
-        if (currentSessionId) {
-          pollForOutput(currentSessionId);
-        }
-
-        setResponse(JSON.stringify(data));
-        const placeholderBanner = document.getElementById('placeholder-banner');
-        if (placeholderBanner) {
-          placeholderBanner.remove();
-        }
-
-        setSelectedFile(null);
-      } catch (error) {
-        ErrorHandler.handleError(error, 'Failed to receive reply to your prompt.');
-      }
-    }
   };
 
   const [htmlSource, setHtmlSource] = useState<string>();
@@ -325,6 +264,92 @@ function App() {
     }, 60000); // 60 seconds timeout
   };
 
+  const isImage = (fileName: string): boolean => {
+    const fileExtension = (fileName.split('.').pop() || '').toLowerCase();
+    return ['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExtension);
+  };
+
+
+  const handleSendInternal = async (prompt: string) => {
+    const currentSessionId = sessionId || getQueryParam('sessionId');
+
+    if (prompt.trim()) {
+      if (selectedFile) {
+        if (isImage(selectedFile.name)) {
+          prompt = `${prompt} ![User Image Upload](http://127.0.0.1:5000/${currentSessionId}/template/img/${selectedFile.name})`
+        } else {
+          prompt = `${prompt} ![File Uploaded](${selectedFile.name})`
+        }
+      }
+
+      setConversations([...conversations, { prompt, response: { message: 'Working on it... <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading" style="width:20px;height:20px;" />', responseSuggestions: [] } }]);
+      scrollToLastElement('conversations-container');
+      setPrompt('');
+      setLoading(true);
+
+      try {
+        const formData = new FormData();
+        formData.append('prompt', prompt);
+        if (selectedFile) {
+          formData.append('file', selectedFile);
+          formData.append('prompt', prompt);
+        }
+
+        const response = await fetch(LOCAL_SERVER_BASE_URL + `sendprompt/${currentSessionId}`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new NetworkError('Failed to send prompt');
+        }
+
+        const data = await response.json();
+        const aiResponse = parseAiResponseWithOptions(data.response);
+
+        // const imageData = await fetchImageData(`${LOCAL_SERVER_BASE_URL}/getimage/${sessionId}`);
+        // console.log(imageData);
+
+        if (canDoTTS) {
+          setTextToSpeak(aiResponse.message);
+        }
+
+        setConversations((prevConversations) =>
+          prevConversations.map((conv, index) =>
+            index === prevConversations.length - 1
+              ? { ...conv, response: aiResponse }
+              : conv
+          )
+        );
+        scrollToLastElement('conversations-container');
+
+        if (currentSessionId) {
+          pollForOutput(currentSessionId);
+        }
+
+        setResponse(JSON.stringify(data));
+        const placeholderBanner = document.getElementById('placeholder-banner');
+        if (placeholderBanner) {
+          placeholderBanner.remove();
+        }
+
+        setSelectedFile(null);
+      } catch (error) {
+        ErrorHandler.handleError(error, 'Failed to receive reply to your prompt.');
+      }
+    }
+  }
+
+  // send handler with prompt set from parameter
+  const handleSendWithPrompt = async (promptParam: string) => {
+    handleSendInternal(promptParam);
+  };
+
+  // send handler with prompt set from state
+  const handleSend = async () => {
+    handleSendInternal(prompt);
+  };
+
   const handleDeleteChat = async () => {
     try {
       const response = await fetch(LOCAL_SERVER_BASE_URL + `deletechat/${sessionId}`, {
@@ -403,11 +428,13 @@ function App() {
   };
 
   const handleDownload = () => {
-    const blob = new Blob([htmlSource], { type: 'text/html' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'generated-website.html';
-    link.click();
+    if (htmlSource) {
+      const blob = new Blob([htmlSource], { type: 'text/html' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'generated-website.html';
+      link.click();
+    }
   };
 
   const handleAzureUpload = async () => {
@@ -451,14 +478,14 @@ function App() {
               </div>
             )}
             {iframeUrl ? (
-              <iframe id="generated-content-iframe" src={iframeUrl} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0 }} />
+              <iframe id="generated-content-iframe" src={iframeUrl} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0, overflowY: 'hidden' }} />
             ) : (
               htmlSource == null ? ( // if no HTML and therefore a new session, show the starting menu
                 <main>
                   <div className="welcome-section">
                     <div className="welcome-message">
                       <img src="/copilot.svg" alt="Logo" className="main-logo" />
-                      <h2>Welcome to SiteBuilder! We’re glad you’re here.</h2>
+                      <h2>Welcome to SiteBuilder! We�re glad you�re here.</h2>
                       <p>From prompt to fully functional purchasable websites in a few clicks</p>
                       <h2 className='sub-header'>Make me a website for:</h2>
                       <div className="button-grid">
@@ -496,8 +523,8 @@ function App() {
             )}
           </TabItem>
           <TabItem name="Source">
-            <div id="source-code-content" style={{ width: '100%', height: '100%' }}>
-              <pre>{htmlSource}</pre>
+            <div id="source-code-content">
+              <CodeBlock language="html" theme={dracula} text={htmlSource} />
             </div>
           </TabItem>
           <TabItem name="Raw">
@@ -515,6 +542,7 @@ function App() {
           handleDeleteChat={handleDeleteChat}
           selectedSession={sessionId}
           handleSessionSelectCallback={handleSessionSelectCallback}
+          handleSendWithPrompt={handleSendWithPrompt}
         />
         <textarea
           className="scrollable-input"

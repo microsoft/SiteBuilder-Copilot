@@ -244,6 +244,12 @@ button:hover {
   height: 40px;
 }
 
+#source-code-content {
+  width: '100%';
+  height: '100%';
+  font-family: 'Courier New', Courier, monospace;
+  overflow-y: scroll;
+}
 
 .file-input-wrapper,
 .image-upload-wrapper,
@@ -360,7 +366,7 @@ button:hover {
 }
 
 .tab-panel {
-  overflow-y: hidden;
+  overflow-y: auto;
 }
 
 #generated-content-iframe {

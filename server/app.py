@@ -7,8 +7,11 @@ import requests
 import re
 import asyncio
 import json
-from pypdf import PdfReader
+import pypandoc
+import csv
+import openpyxl
 
+from pypdf import PdfReader
 from image_populator import ImagePopulator
 
 app = Flask(__name__)
@@ -47,7 +50,11 @@ async def send_prompt(sessionId):
 
     try:
         if file:
-            file_content = saveAttachment(file, sessionId)
+            if (is_image(file.filename)):
+                processAttachment(file, sessionId)
+                file_content = None
+            else:
+                file_content = saveAttachment(file, sessionId)
 
         plaintext_response = orchestrator_agent.send_prompt(prompt, file_content)
         asyncio.create_task(asyncio.to_thread(process_details, prompt, file_content, sessionId, session_title_agent))
@@ -153,6 +160,10 @@ def serve_html_template(session_id, filename):
 def serve_placeholder_image():
     return send_from_directory(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets'), 'placeholder.jpg')
 
+@app.route('/img/loading_gradient.gif', methods=['GET'])
+def serve_gradient_image():
+    return send_from_directory(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets'), 'loading_gradient.gif')
+
 @app.route('/<sessionid>/template/img/<filename>')
 def serve_image(sessionid, filename):
     directory = os.path.join(get_session_directory(sessionid), 'template', 'img')
@@ -252,6 +263,11 @@ def delete_chat(sessionId):
         print(e)
         return jsonify({'error': str(e)}), 500
 
+def get_image_serve_dir(session_id):
+    session_dir = get_session_directory(session_id)
+    img_dir = os.path.join(session_dir, 'template', 'img')
+    return img_dir
+
 def saveAttachment(file, session_id):
     file_path = processAttachment(file, session_id)
     with open(file_path, 'rb') as f:
@@ -259,24 +275,60 @@ def saveAttachment(file, session_id):
     
     return file_content
 
+def is_image(file_path):
+    return file_path.lower().endswith((".jpg", ".jpeg", ".png", ".gif", ".bmp"))
+
+def is_pdf(file_path):
+    return file_path.lower().endswith("pdf")
+
+def is_document(file_path):
+    return file_path.lower().endswith((".odt", ".docx", ".doc" ".rtf"))
+
+def is_office_spreadsheet(file_path):
+    return file_path.lower().endswith((".xls", ".xlsx"))
+
 def processAttachment(file, session_id):
     upload_dir = os.path.join(get_session_directory(session_id), 'uploads')
     os.makedirs(upload_dir, exist_ok=True)
     file_path = ""
     try:
-        file_path = os.path.join(upload_dir, file.filename)
-        file.save(file_path)
-
         filename = file.filename.lower()
-        if (filename.endswith(".pdf")):
+        if filename.endswith(".pdf"):
+            file_path = os.path.join(upload_dir, file.filename)
+            file.save(file_path)
             text = ""
             reader = PdfReader(file_path)
             for p in reader.pages:
                 text += p.extract_text() + "\n"
             
-            file_path += ".txt"
+            text_file_path = file_path + ".txt"
+            with open(text_file_path, 'w') as f:
+                f.write(text)
+            file_path = text_file_path
+        elif (is_document(filename)):
+            text = ""
+            original_path = os.path.join(upload_dir, file.filename)
+            file.save(original_path)
+            file_path = original_path + ".txt"
+            pypandoc.convert_file(original_path, 'plain', outputfile=file_path)
+        elif (is_office_spreadsheet(filename)):
+            original_path = os.path.join(upload_dir, file.filename)
+            file.save(original_path)
+            file_path = original_path + ".csv"
+            workbook = openpyxl.load_workbook(original_path, data_only=True)
             with open(file_path, 'w') as f:
-                f.write(text)         
+                out_csv = csv.writer(f)
+                for sheet_name in workbook.sheetnames:
+                    sheet = workbook[sheet_name]
+                    for row in sheet.rows:
+                        out_csv.writerow([cell.value for cell in row])			
+        elif is_image(filename):
+            print("Upload was an image file, saving image to serve directory.")
+            image_dir = get_image_serve_dir(session_id)
+            os.makedirs(image_dir, exist_ok=True)
+            file_path = os.path.join(image_dir, file.filename)
+            file.save(file_path)
+            print(f"Saved image to: {file_path}")
     except Exception as e:
         print(e)
     return file_path
