@@ -7,16 +7,21 @@ export const TabItem: React.FC<TabItemProps> = ({ name, children }) => (
 )
 
 export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, handleDownload, handleAzureUpload }) => {
-    const [activeTab, setActiveTab] = useState(activeTabIndex);
-    const handleTabClick = (index: number) => {
-      setActiveTab(index);
-    };
-    const tabs = React.Children.toArray(children).filter(
-        (child): child is ReactElement<TabItemProps> =>
-          React.isValidElement(child) && child.type === TabItem
-      );
-    return (
-      <div className="tabs">
+  const [activeTab, setActiveTab] = useState(activeTabIndex);
+  const handleTabClick = (index: number) => {
+    setActiveTab(index);
+  };
+  const tabs = React.Children.toArray(children).filter(
+    (child): child is ReactElement<TabItemProps> =>
+      React.isValidElement(child) && child.type === TabItem
+  );
+  return (
+    <div className="tabs-header-container">
+      <div className="tabs-header">
+        <div className="logo-title-wrapper">
+          <img src="/copilot.svg" alt="Logo" className="main-logo" />
+          <h1 className="tabs-title">Site Builder Copilot</h1>
+        </div>
         <div className="tab-list-wrapper">
           <nav>
             <ul className="tab-list">
@@ -26,10 +31,10 @@ export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, 
                     key={`tab-btn-${index}`}
                     id={`tab-${tab.props.name}`}
                     onClick={() => handleTabClick(index)}
-                  className={`tab-btn ${
-                    activeTab === index && "tab-btn--active"
-                  }`}
-                  >{tab.props.name}</button>
+                    className={`tab-btn ${activeTab === index ? "tab-btn--active" : ""}`}
+                  >
+                    {tab.props.name}
+                  </button>
                 </li>
               ))}
             </ul>
@@ -45,9 +50,12 @@ export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, 
                 <i className="fas fa-cloud"></i>
               </button>
             </div>
-          </div>          
+          </div>
         </div>
-        {tabs[activeTab]}
       </div>
-    );
+      {tabs[activeTab]}
+    </div>
+
+
+  );
 };
