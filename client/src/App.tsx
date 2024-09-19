@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { renderToString } from 'react-dom/server';
 import ConversationPanel from './ConversationPanel';
 import { TabItem, TabList } from './components/TabComponents';
 import 'regenerator-runtime/runtime';
@@ -26,10 +27,51 @@ const getQueryParam = (name: string) => {
 
 function App() {
   const [prompt, setPrompt] = useState('');
+
+  const startingPage = (
+    <main>
+      <div className="welcome-section">
+        <div className="welcome-message">
+          <img src="/copilot.svg" alt="Logo" className="main-logo" />
+          <h2>Welcome to SiteBuilder! We’re glad you’re here.</h2>
+          <p>From prompt to fully functional purchasable websites in a few clicks</p>
+          <h2 className='sub-header'>Make me a website for:</h2>
+          <div className="button-grid">
+            <button onClick={() => setPrompt('A Videogame')}>
+              Custom Videogames
+            </button>
+            <button onClick={() => setPrompt('Personal Projects Page')}>
+              Personal Projects & Resume
+            </button>
+            <button onClick={() => setPrompt('Real Estate listings page')}>
+              Real Estate Group listings
+            </button>
+            <button onClick={() => setPrompt('E-commerce Storefront')}>
+              E-commerce Storefronts
+            </button>
+            <button onClick={() => setPrompt('Health & Fitness Blog')}>
+              Health & Fitness Blogs
+            </button>
+            <button onClick={() =>setPrompt('Social Media Website')}>
+              Social Media Sites
+            </button>
+            <button
+              onClick={() =>setPrompt('Travel Agent Site')}>
+              Travel Agent Sites
+            </button>
+            <button onClick={() =>setPrompt('Personal Wiki')}>
+              Personal Wiki
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+
+  const [htmlSource, setHtmlSource] = useState<string>(renderToString(startingPage));
   const [conversations, setConversations] = useState<{ prompt: string, response: AiResponse }[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
-  const [htmlSource, setHtmlSource] = useState<string>('<h1 id="placeholder-banner">Your Generated Content Will Appear Here!</h1>');
   const [response, setResponse] = useState<string>('{}');
   const [iframeUrl, setIframeUrl] = useState<string>('');
   const [sessionHistory, setSessionHistory] = useState<SessionDetails[]>([]);
@@ -464,7 +506,7 @@ function App() {
         />
         <textarea
           className="scrollable-input"
-          placeholder="Type your prompt here!"
+          placeholder="Ask for a website here!"
           value={`${prompt}${transcript}`}
           onChange={(e) => setPrompt(e.target.value)}
           onKeyPress={handleKeyPress}
