@@ -71,6 +71,15 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
     }
   };
 
+
+  const parseFiles = (message: string) => {
+    const imageRegex = /!\[.*?\]\((.*?)\)/g;
+    return message.replace(imageRegex, (_match, url) => {
+      const fileName = url.split('/').pop();
+      return `<br/><br/><span class='file-attachment-label'><i class="fa fa-file"></i>&nbsp; ${fileName}</span>`;
+    });
+  };
+
   return (
     <div id="conversation" className="conversations">
       <div id="conversation-header" className="conversation-header">
@@ -115,7 +124,7 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
           conversations.map((conversation, index) => (
             <div key={index} className="conversation">
               <div className="submitted-prompt">
-                {renderContent(conversation.prompt)}
+                {renderContent(parseFiles(conversation.prompt))}
               </div>
               <div id="ai-response-container">
                 <div

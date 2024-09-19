@@ -88,7 +88,8 @@ class AgentFactory:
                     - When the user needs an image as a background CSS use a a placeholder path, with a descriptive alt message in a comment on the same line as with this example below
                     background-image: url("/img/placeholder.jpg"); /*A soaring futuristic cityscape for the site banner.*/
                     - Any existing images with a url beginning with http://127.0.0.1:5000 should be left unmodified, unless the user requests a change requiring a new image or its removal.
-
+                    - The user might upload an image, which will look like markdown with a url.  You can use that url to place the image in the page. Below is an example:
+                    ![User Image Upload](http://127.0.0.1:5000/session_id_guid/template/img/filename.jpg)
 
 
                     Please also bear these guidelines in mind:

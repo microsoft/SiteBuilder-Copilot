@@ -52,11 +52,9 @@ async def send_prompt(sessionId):
         if file:
             if (is_image(file.filename)):
                 processAttachment(file, sessionId)
-                prompt = f"{prompt} Image uploaded: http://127.0.0.1:5000/{sessionId}/template/img/{file.filename}"
                 file_content = None
             else:
                 file_content = saveAttachment(file, sessionId)
-                prompt = f"{prompt} File uploaded: {file.filename}"
 
         plaintext_response = orchestrator_agent.send_prompt(prompt, file_content)
         asyncio.create_task(asyncio.to_thread(process_details, prompt, file_content, sessionId, session_title_agent))
