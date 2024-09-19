@@ -466,45 +466,47 @@ function App() {
           </div>
         )}
         <div className="button-wrapper" title="Submit">
-          <div className="image-upload-wrapper" title="Add an image">
-            {showUrlInput && (
-              <div className="url-input-box">
-                <small>Add an image</small>
-                <input
-                  type="text"
-                  placeholder="Paste link"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleImageUrlSubmit()}
-                />
+          <div id='non-send-buttons'>
+            <div className="image-upload-wrapper" title="Add an image">
+              {showUrlInput && (
+                <div className="url-input-box">
+                  <small>Add an image</small>
+                  <input
+                    type="text"
+                    placeholder="Paste link"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleImageUrlSubmit()}
+                  />
+                </div>
+              )}
+              <div className="image-upload-label" onClick={() => setShowUrlInput(!showUrlInput)}>
+                <i className="fas fa-image"></i>
               </div>
-            )}
-            <div className="image-upload-label" onClick={() => setShowUrlInput(!showUrlInput)}>
-              <i className="fas fa-image"></i>
             </div>
-          </div>
-          <div className="file-input-wrapper" title="Add a file">
-            <input
-              type="file"
-              id="file-input"
-              onChange={handleFileChange}
-              style={{ display: 'none' }}
-            />
-            <label htmlFor="file-input" className="file-input-label">
-              <i className="fas fa-paperclip"></i>
-            </label>
-          </div>
-          {browserSupportsSpeechRecognition &&
-            <div className={`generic-button-input-wrapper ${listening ? "generic-button-input-on" : "generic-button-input-off"}`} title="Speak a prompt" onClick={handleSpeechChange}>
-              <span className="speech-input-icon">
-                <i className={`fas fa-microphone ${listening ? "fa-inverse" : ""}`}></i>
+            <div className="file-input-wrapper" title="Add a file">
+              <input
+                type="file"
+                id="file-input"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+              <label htmlFor="file-input" className="file-input-label">
+                <i className="fas fa-paperclip"></i>
+              </label>
+            </div>
+            {browserSupportsSpeechRecognition &&
+              <div className={`generic-button-input-wrapper ${listening ? "generic-button-input-on" : "generic-button-input-off"}`} title="Speak a prompt" onClick={handleSpeechChange}>
+                <span className="speech-input-icon">
+                  <i className={`fas fa-microphone ${listening ? "fa-inverse" : ""}`}></i>
+                </span>
+              </div>
+            }
+            <div className={`generic-button-input-wrapper ${canDoTTS ? "generic-button-input-on" : "generic-button-input-off"}`} title="Hear the responses" onClick={handleHearingChange}>
+              <span className="hear-input-icon">
+                <i className={`fas fa-headphones ${canDoTTS ? "fa-inverse" : ""}`}></i>
               </span>
             </div>
-          }
-          <div className={`generic-button-input-wrapper ${canDoTTS ? "generic-button-input-on" : "generic-button-input-off"}`} title="Hear the responses" onClick={handleHearingChange}>
-            <span className="hear-input-icon">
-              <i className={`fas fa-headphones ${canDoTTS ? "fa-inverse" : ""}`}></i>
-            </span>
           </div>
           <button className="send-button" onClick={handleSend}>
             <span className="send-icon">

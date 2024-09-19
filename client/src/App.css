@@ -83,18 +83,22 @@ html, body {
   font-size: 16px;
 }
 
+#non-send-buttons {
+  display: flex;
+}
+
 .send-button {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 10px;
-  background-color: #007bff;
-  color: white;
+  color: #007bff;
+  transition: background-color 0.3s;
+  background-color: #ffffff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
-  width: 20vw;
   height: 30px;
 }
 
@@ -107,16 +111,13 @@ html, body {
 .button-wrapper {
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
 .send-button {
-  margin-right: 8px;
   height: 40px;
 }
 
-.send-button:hover {
-  background-color: #005abb;
-}
 
 .file-input-wrapper, .image-upload-wrapper, .generic-button-input-wrapper {
   display: inline-block;
@@ -134,7 +135,7 @@ html, body {
   margin-left: 3px;
 }
 
-.file-input-label:hover, .image-upload-label:hover, .generic-button-input-off:hover {
+.file-input-label:hover, .image-upload-label:hover, .generic-button-input-off:hover, .send-button:hover {
   background-color: #e0e0e0;
 }
 
@@ -307,21 +308,16 @@ html, body {
     border: none;
   }
 
-  .send-button {
+  .send-icon {
     background-color: #1e90ff;
-    color: white;
   }
 
-  .send-button .send-icon {
-    color: white;
-  }
-
-  .file-input-label, .image-upload-label{
+  .file-input-label, .image-upload-label, .send-button{
     background-color: #444444;
     color: #f0f0f0;
   }
 
-  .file-input-label:hover, .image-upload-label:hover {
+  .file-input-label:hover, .image-upload-label:hover, .send-button:hover {
     background-color: #555555;
   }
 
