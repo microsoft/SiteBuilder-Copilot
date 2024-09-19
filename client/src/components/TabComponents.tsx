@@ -45,12 +45,10 @@ export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, 
                 <i className="fas fa-cloud"></i>
               </button>
             </div>
-            <div className="chat-visibility-button-wrapper" title={`${isChatVisible ? "Hide chat": "Show chat"}`}>
-              <button className="chat-visibility-button" onClick={() => setIsChatVisible(!isChatVisible)}>
-                <i className={`fas ${isChatVisible ? 'fa-arrow-right' : 'fa-arrow-left'}`}></i>
-              </button>
+            <div className="chat-visibility-button" onClick={() => setIsChatVisible(!isChatVisible)} title={`${isChatVisible ? "Hide chat": "Show chat"}`}>
+              <i className={`fas ${isChatVisible ? 'fa-arrow-right' : 'fa-arrow-left'}`}></i>
+            </div>
             </div>            
-          </div>          
         </div>
         {tabs[activeTab]}
       </div>

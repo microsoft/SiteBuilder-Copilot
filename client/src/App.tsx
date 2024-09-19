@@ -535,7 +535,7 @@ function App() {
           </TabItem>
         </TabList>
       </div>
-      <div className="right-column" style={{ display: isChatVisible ? 'block' : 'none' }}>
+      <div className="right-column" style={{ display: isChatVisible ? 'flex' : 'none' }}>
         <ConversationPanel
           conversations={conversations}
           sessionHistory={sessionHistory}
