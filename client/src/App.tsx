@@ -462,7 +462,7 @@ function App() {
               </div>
             )}
             {iframeUrl ? (
-              <iframe id="generated-content-iframe" src={iframeUrl} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0 }} />
+              <iframe id="generated-content-iframe" src={iframeUrl} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0, overflowY: 'hidden'}} />
             ) : (
               <div id="generated-content" dangerouslySetInnerHTML={{ __html: htmlSource }} style={{ width: '100%', height: '100%' }} />
             )}
