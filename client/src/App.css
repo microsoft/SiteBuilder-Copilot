@@ -44,12 +44,11 @@
 }
 
 .tab-btn {
-  border: none;
   padding: 4px;
   font-size: 14px; /* Smaller font size */
   cursor: pointer;
   font-weight: normal;
-  border: transparent;
+  border: none;
   background-color: transparent;
   outline: none;
   position: relative;
@@ -78,8 +77,8 @@
   background-color: #5c6ac4; /* Color of the bottom border */
   position: absolute;
   bottom: 5px;
-  left: 13%;
-  
+  left: 12%;
+  width: 0;
   transition: width 0.3s ease;
 }
 
