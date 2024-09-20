@@ -16,9 +16,9 @@ export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, 
       React.isValidElement(child) && child.type === TabItem
   );
   return (
-    <div className="tabs-header-container">
+    <div className="tabs-header-container" >
       <div className="tabs-header">
-        <div className="logo-title-wrapper">
+        <div className="logo-title-wrapper" onClick={() => window.location.href = window.location.origin + window.location.pathname}>
           <img src="/copilot.svg" alt="Logo" className="main-logo" />
           <h1 className="tabs-title">Site Builder Copilot</h1>
         </div>
