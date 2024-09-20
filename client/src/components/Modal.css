@@ -18,9 +18,25 @@
     margin: 15% auto; /* 15% from the top and centered */
     padding: 20px;
     border: 1px solid #888;
-    width: 80%; /* Could be more or less, depending on screen size */
+    width: 25vw;
 }
 
-.modal-close:hover {
+.modal-close:hover button {
     cursor: pointer;
+}
+
+.close-modal-container {
+    width: 100%;
+    text-align: end;
+}
+
+.send-button {
+    margin-top: 5px;
+}
+
+.modal-input-field input {
+    width: 400px;
+    height: 30px;
+    border-radius: 3px;
+    margin-top: 5px;
 }

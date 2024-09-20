@@ -53,15 +53,15 @@ export const Modal: React.FC<ModalTypeProps> = ({ modalIsOpen, handleModal, url,
             { modalIsOpen &&
             <div className="modal">
                 <div className="modal-content">
-                    <div className="generic-button-input-wrapper generic-button-input-off" title="Close Azure modal" onClick={() => handleModal(false)}>
-                        <span className="modal-close">
+                    <div className="close-modal-container" title="Close Azure modal" onClick={() => handleModal(false)}>
+                        <span className="generic-button-input-wrapper generic-button-input-off modal-close">
                             <i className="fas fa-times"></i>
                         </span>
                     </div>
                     <form>
                         Please enter a website name (Must be max 24 chars)
                         <br />
-                        <div>
+                        <div className="modal-input-field">
                             <input
                                 type="text"
                                 name="website_name"
@@ -71,21 +71,22 @@ export const Modal: React.FC<ModalTypeProps> = ({ modalIsOpen, handleModal, url,
                             { modalError && <div style={{color: "red"}}>{modalError}</div>}
                         </div>
                         <br />
-                        <br />
                         Please enter an Azure resource group name
                         <br />
-                        <input
-                            type="text"
-                            name="azure_resource_group_name"
-                            value={modalInputs.azure_resource_group_name}
-                            onChange={handleChange}
-                        />
+                        <div className="modal-input-field">
+                            <input
+                                type="text"
+                                name="azure_resource_group_name"
+                                value={modalInputs.azure_resource_group_name}
+                                onChange={handleChange}
+                                />
+                        </div>
                         <br />
                         { azureUrl && <div>Cloud URL is hosted at {azureUrl}. Please wait a few minutes for the website to finish processing on Azure.</div>}
                     </form>
                     <button className="send-button" title="Submit Azure resource options" onClick={sendAzureForm}>
                         <span className="send-icon">
-                            <i className="fas fa-paper-plane"></i>
+                            Submit &nbsp;<i className="fas fa-paper-plane"></i>
                         </span>
                     </button>
                 </div>
