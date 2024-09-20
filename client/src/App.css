@@ -1,3 +1,7 @@
+.chat-visibility-button {
+  margin-left: 15px;
+}
+
 .tabs-header-container {
   width: 100%; /* Makes sure the header spans full width */
   border-bottom: 1px solid #ddd; /* Optional for adding a border under the header */
@@ -27,13 +31,14 @@
 }
 
 .tab-list-wrapper {
+  align-items: center;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-grow: 1;
   max-width: 100%;
   padding-left: 15px;
-  padding-right: 15px;
+  padding-right: 10px;
 }
 
 .tab-list {
@@ -98,6 +103,7 @@
 .right-tab-list-wrapper {
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
 .download-button,
@@ -586,5 +592,4 @@ button:hover {
   .loading-spinner {
     background: rgba(0, 0, 0, 0.5);
   }
-
 }
