@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ConversationPanel from './ConversationPanel';
 import { TabItem, TabList } from './components/TabComponents';
+import { Modal } from './components/Modal';
 import 'regenerator-runtime/runtime';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { useSpeech } from "react-text-to-speech";
 import { SessionDetails } from './types/SessionTypes';
 import { AiResponse } from './types/ConversationTypes';
 import { CodeBlock, dracula } from "react-code-blocks";
-
 import './App.css';
 import { ErrorHandler, NetworkError, ResponseError } from './ErrorHandler';
 
@@ -33,6 +33,7 @@ function App() {
       handleSend();  // Send when the prompt is updated
       setShouldSendPrompt(false); // Reset flag after sending
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prompt, shouldSendPrompt]);
 
   const handleClick = (newPrompt: string) => {
@@ -52,6 +53,7 @@ function App() {
   const [showUrlInput, setShowUrlInput] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string>('');
   const [isChatVisible, setIsChatVisible] = useState<boolean>(true);
+  const [modalIsOpen, setIsOpen] = useState<boolean>(false);
   const {
     transcript,
     finalTranscript,
@@ -270,7 +272,6 @@ function App() {
     return ['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExtension);
   };
 
-
   const handleSendInternal = async (prompt: string) => {
     const currentSessionId = sessionId || getQueryParam('sessionId');
 
@@ -392,6 +393,7 @@ function App() {
     window.history.replaceState({ path: newUrl }, '', newUrl);
     setSessionId(selectedSessionId);
     setIframeUrl(LOCAL_SERVER_BASE_URL + `jobs/${selectedSessionId}/index.html`);
+    setIsOpen(false);
 
     populateConversations(selectedSessionId);
   };
@@ -438,9 +440,8 @@ function App() {
     }
   };
 
-  const handleAzureUpload = async () => {
-    alert("Not implemented yet!");
-    return Promise.resolve(false);
+  const handleModal = (newIsOpen: boolean) => {
+    setIsOpen(newIsOpen);
   }
 
   const handleImageUrlSubmit = () => {
@@ -469,8 +470,9 @@ function App() {
 
   return (
     <div className="container">
+      <Modal modalIsOpen={modalIsOpen} url={`${LOCAL_SERVER_BASE_URL}/azurestorageupload/${sessionId}`} handleModal={handleModal} sessionId={sessionId} />
       <div className="left-column" style={{ width: '100%' }}>
-        <TabList activeTabIndex={0} handleDownload={handleDownload} handleAzureUpload={handleAzureUpload} isChatVisible={isChatVisible} setIsChatVisible={setIsChatVisible}>
+        <TabList activeTabIndex={0} handleDownload={handleDownload} handleModal={handleModal} isChatVisible={isChatVisible} setIsChatVisible={setIsChatVisible}>
           <TabItem name="Website">
             {loading && (
               <div className="loading-spinner" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1 }}>
@@ -544,6 +546,7 @@ function App() {
           selectedSession={sessionId}
           handleSessionSelectCallback={handleSessionSelectCallback}
           handleSendWithPrompt={handleSendWithPrompt}
+          handleModal={handleModal}
         />
         <textarea
           className="scrollable-input"

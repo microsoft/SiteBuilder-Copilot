@@ -10,7 +10,7 @@ export interface TabListProps {
     activeTabIndex: number;
     children: ReactElement<TabItemProps> | ReactElement<TabItemProps>[];
     handleDownload: () => void;
-    handleAzureUpload: () => Promise<boolean>;
+    handleModal: (newIsOpen: boolean) => void;
     isChatVisible: boolean;
     setIsChatVisible: (isChatVisible: boolean) => void;
 }
