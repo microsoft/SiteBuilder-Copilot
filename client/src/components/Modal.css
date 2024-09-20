@@ -1,0 +1,42 @@
+/* The Modal (background) */
+.modal {
+    display: center;
+    position: fixed; /* Stay in place */
+    z-index: 10; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+  
+/* Modal Content/Box */
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 25vw;
+}
+
+.modal-close:hover button {
+    cursor: pointer;
+}
+
+.close-modal-container {
+    width: 100%;
+    text-align: end;
+}
+
+.send-button {
+    margin-top: 5px;
+}
+
+.modal-input-field input {
+    width: 400px;
+    height: 30px;
+    border-radius: 3px;
+    margin-top: 5px;
+}

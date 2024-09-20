@@ -12,6 +12,12 @@ import csv
 import openpyxl
 
 from pypdf import PdfReader
+from config import config
+from azure.identity import DefaultAzureCredential, AzureCliCredential
+from azure.mgmt.resource import ResourceManagementClient
+from azure.mgmt.storage import StorageManagementClient
+from azure.mgmt.resource.subscriptions import SubscriptionClient
+from azure.storage.blob import BlobServiceClient, ContentSettings, StaticWebsite
 from image_populator import ImagePopulator
 
 app = Flask(__name__)
@@ -249,6 +255,159 @@ def get_session_history():
         
         """ return jsonify([d for d in os.listdir(jobs_dir) if os.path.isdir(os.path.join(jobs_dir, d))]) """
         return jsonify(session_details_list)
+    except Exception as e:
+        print(e)
+        return jsonify({'error': str(e)}), 500
+
+def initialize_resource_group(resource_client, resource_group_name, location):
+    try:
+        rg_result = resource_client.resource_groups.create_or_update(resource_group_name, { "location": location })
+
+        print(f"Provisioned resource group {rg_result.name}")
+    except Exception as e:
+        return e
+
+def initialize_storage_account(storage_client, credential, subscription_id, resource_group_name, location, storage_account_name):
+    try:
+        # Check if the account name is available. Storage account names must be unique across
+        # Azure because they're used in URLs.
+        availability_result = storage_client.storage_accounts.check_name_availability(
+            { "name": storage_account_name }
+        )
+
+        if not availability_result.name_available:
+            error = f"Website name {storage_account_name} is already in use. Try another name."
+            print(error)
+            return error
+        
+        # The name is available, so provision the account
+        poller = storage_client.storage_accounts.begin_create(resource_group_name, storage_account_name,
+            {
+                "location" : location,
+                "kind": "StorageV2",
+                "sku": {"name": "Standard_LRS"}
+            }
+        )
+
+        # Long-running operations return a poller object; calling poller.result()
+        # waits for completion.
+        account_result = poller.result()
+        print(f"Provisioned storage account {account_result.name}")
+
+        return ''
+    except Exception as e:
+        print(e)
+        return e
+
+def azure_setup(credential, subscription_id, resource_group_name, location, storage_account_name):
+    try:
+        # Step 1: Provision the resource group.
+        resource_client = ResourceManagementClient(credential, subscription_id)
+
+        # Retrieve the list of resource groups
+        group_list = resource_client.resource_groups.list()
+        
+        resource_group_exists = False
+        for group in group_list:
+            if group.name == resource_group_name:
+                resource_group_exists = True
+                break
+
+        if resource_group_exists:
+            print(f"Resource group {resource_group_name} already exists. Not creating a new one.")
+        else:
+            print(f"Resource group {storage_account_name} does not exist. Creating a new one.")
+            error = initialize_resource_group(resource_client, resource_group_name, location)
+            if error:
+                return error, None
+
+        # Retrieve the list of resources in "myResourceGroup" (change to any name desired).
+        # The expand argument includes additional properties in the output.
+        resource_list = resource_client.resources.list_by_resource_group(resource_group_name, expand="createdTime,changedTime")
+
+        resource_exists = False
+        for resource in list(resource_list):
+            if resource.name == storage_account_name and resource.type == "Microsoft.Storage/storageAccounts":
+                resource_exists = True
+
+        storage_client = StorageManagementClient(credential, subscription_id)
+
+        if resource_exists:
+            print(f"Storage resource {storage_account_name} already exists. Not creating a new one.")
+        else:
+            print(f"Storage resource {storage_account_name} does not exist. Creating a new one.")
+            error = initialize_storage_account(storage_client, credential, subscription_id, resource_group_name, location, storage_account_name)
+            if error:
+                return error, None
+
+        return '', storage_client
+
+    except Exception as e:
+        return e, None
+        
+def get_connection_info(storage_account_name, resource_group_name, location):
+    try:
+        credential = DefaultAzureCredential()
+
+        # Retrieve subscription ID from environment variable
+        client = SubscriptionClient(credential)
+
+        subscription_id = next(client.subscriptions.list()).subscription_id
+        
+        error, storage_client = azure_setup(credential, subscription_id, resource_group_name, location, storage_account_name)
+
+        if error or not storage_client:
+            return error, '', ''
+        
+        url = storage_client.storage_accounts.get_properties(resource_group_name, storage_account_name).primary_endpoints.web
+
+        # Step 3: Retrieve the account's primary access key and generate a connection string.
+        keys = storage_client.storage_accounts.list_keys(resource_group_name, storage_account_name)
+
+        conn_string = f"DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName={storage_account_name};AccountKey={keys.keys[0].value}"
+
+        return '', conn_string, url
+    except Exception as e:
+        return e, '', ''
+
+@app.route('/azurestorageupload/<session_id>', methods=['PUT'])
+def upload_to_azure_storage(session_id):
+    if 'website_name' not in request.form or 'azure_resource_group_name' not in request.form:
+        return jsonify({"error": "Inputs not provided"}), 400
+
+    try:
+        storage_account_name = request.form['website_name']
+        resource_group_name = request.form['azure_resource_group_name']
+        location = "westus"
+
+        # Get the connection string
+        error, conn_string, url = get_connection_info(storage_account_name, resource_group_name, location)
+
+        if error or not conn_string:
+            print(error)
+            return jsonify({'error': str(error)}), 500
+
+        blob_service_client = BlobServiceClient.from_connection_string(conn_str=conn_string)
+        static_website = StaticWebsite(enabled=True, index_document="index.html", error_document404_path="error.html")
+        blob_service_client.set_service_properties(static_website=static_website)
+
+        session_directory = get_session_directory(session_id)
+
+        for root, dirs, files in os.walk(session_directory):
+            if not root.endswith("template"):
+                continue
+            for file in files:
+                content_settings = None
+                if ".html" in file:
+                    content_settings = ContentSettings(content_type='text/html')
+                else:
+                    content_settings = ContentSettings()
+
+                blob_client = blob_service_client.get_blob_client(container="$web", blob=file)
+                with open(os.path.join(root, file), "rb") as data:
+                    blob_client.upload_blob(data, overwrite=True, content_settings=content_settings, blob_type="BlockBlob")
+
+        return jsonify({'azure_url': url}), 200
     except Exception as e:
         print(e)
         return jsonify({'error': str(e)}), 500

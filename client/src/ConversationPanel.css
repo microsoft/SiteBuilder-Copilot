@@ -62,7 +62,7 @@ select:hover,
 #conversation {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100%;
     /* Full height of the viewport */
 }
 

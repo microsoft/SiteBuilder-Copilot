@@ -16,6 +16,7 @@ interface ConversationPanelProps {
   handleDeleteChat: () => Promise<void>;
   handleSessionSelectCallback: (sessionId: string) => void;
   handleSendWithPrompt: (prompt: string) => void;
+  handleModal: (newIsOpen: boolean) => void;
 }
 
 const ConversationPanel: React.FC<ConversationPanelProps> = ({
@@ -26,11 +27,13 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
   handleDeleteChat,
   handleSessionSelectCallback,
   handleSendWithPrompt,
+  handleModal
 }) => {
 
   const handleSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const sessionId = event.target.value;
     handleSessionSelectCallback(sessionId);
+    handleModal(false);
   }
 
   const handleSuggestionClick = (event: React.MouseEvent<HTMLButtonElement>) => {

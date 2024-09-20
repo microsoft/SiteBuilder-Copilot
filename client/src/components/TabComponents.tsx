@@ -6,7 +6,7 @@ export const TabItem: React.FC<TabItemProps> = ({ name, children }) => (
   <div className="tab-panel" id={`${name}`}>{children}</div>
 )
 
-export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, handleDownload, handleAzureUpload, isChatVisible, setIsChatVisible }) => {
+export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, handleDownload, handleModal, isChatVisible, setIsChatVisible }) => {
   const [activeTab, setActiveTab] = useState(activeTabIndex);
   const handleTabClick = (index: number) => {
     setActiveTab(index);
@@ -46,7 +46,7 @@ export const TabList: React.FC<TabListProps> = ({ children, activeTabIndex = 0, 
               </button>
             </div>
             <div className="upload-button-wrapper" title="Upload to Azure">
-              <button className="upload-button" onClick={handleAzureUpload}>
+              <button className="upload-button" onClick={() => handleModal(true)}>
                 <i className="fas fa-cloud"></i>
               </button>
             </div>
