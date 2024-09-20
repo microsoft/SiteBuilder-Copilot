@@ -471,7 +471,7 @@ function App() {
   return (
     <div className="container">
       <Modal modalIsOpen={modalIsOpen} url={`${LOCAL_SERVER_BASE_URL}/azurestorageupload/${sessionId}`} handleModal={handleModal} sessionId={sessionId} />
-      <div className="left-column" style={{ width: '100%' }}>
+      <div className="left-column">
         <TabList activeTabIndex={0} handleDownload={handleDownload} handleModal={handleModal} isChatVisible={isChatVisible} setIsChatVisible={setIsChatVisible}>
           <TabItem name="Website">
             {loading && (
@@ -481,7 +481,7 @@ function App() {
               </div>
             )}
             {iframeUrl ? (
-              <iframe id="generated-content-iframe" src={iframeUrl} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 0, overflowY: 'hidden' }} />
+              <iframe id="generated-content-iframe" src={iframeUrl} />
             ) : (
               htmlSource == null ? ( // if no HTML and therefore a new session, show the starting menu
                 <main>
