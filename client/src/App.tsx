@@ -79,6 +79,63 @@ function App() {
     }
   });
 
+  const [logoVisible, setLogoVisible] = useState(false);
+  const [displayedWords, setDisplayedWords] = useState<string[]>([]);
+  const [subtextVisible, setSubtextVisible] = useState(false);
+
+  const config = {
+    logoFadeInDuration: 2000, 
+    wordDelay: 200,           
+    sentenceDelay: 500,       
+    subtextFadeInDuration: 1000
+  };
+  
+
+  useEffect(() => {
+    // Fade in logo
+    setLogoVisible(true);
+
+    // After logo fades in, display welcome message
+    const logoTimer = setTimeout(() => {
+      displayWelcomeMessage();
+    }, config.logoFadeInDuration);
+
+    return () => clearTimeout(logoTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  
+
+  const displayWelcomeMessage = () => {
+    setDisplayedWords([]);
+    setSubtextVisible(false);
+    const message = "Welcome to SiteBuilder! We're glad you're here.";
+    const words = message.split(" ");
+    let cumulativeDelay = 0;
+
+    words.forEach((word) => {
+      // Add word to displayedWords after cumulativeDelay
+      setTimeout(() => {
+        setDisplayedWords(prev => [...prev, (` ${word}`)]);
+      }, cumulativeDelay);
+
+      cumulativeDelay += config.wordDelay;
+
+      // If the word ends with a sentence-ending punctuation, add extra delay
+      if (/[.!?]$/.test(word)) {
+        cumulativeDelay += config.sentenceDelay;
+      }
+    });
+
+    // Calculate total time to display all words
+    const totalWordTime = cumulativeDelay + 500; // Extra 500ms for last word's transition
+
+    // After all words are displayed, fade in the subtext
+    setTimeout(() => {
+      setSubtextVisible(true);
+    }, totalWordTime);
+  };
+
   useEffect(() => {
     if (textToSpeak.length == 0) {
       return;
@@ -408,7 +465,9 @@ function App() {
         const aiResponse = parseAiResponseWithOptions(messages[i + 1].content);
         promptExchanges.push({ prompt: messages[i].content, response: aiResponse });
       }
-      setConversations(promptExchanges);
+      setConversations(promptExchanges.filter(exchange =>{
+        return !exchange.response.message.startsWith("File content:");
+      }));
       setTimeout(() => {
         goToLastConversation();
       }, 50);
@@ -487,17 +546,45 @@ function App() {
                 <main>
                   <div className="welcome-section">
                     <div className="welcome-message">
-                      <img src="/copilot.svg" alt="Logo" className="main-logo" />
-                      <h2>Welcome to SiteBuilder! We're glad you're here.</h2>
-                      <p>From prompt to fully functional websites in a few clicks</p>
-                      <h2 className='sub-header'>Make me a website for:</h2>
+                    <img
+                        id="welcome-logo"
+                        src="/copilot.svg"
+                        alt="Logo"
+                        className={`main-logo ${logoVisible ? 'fade-in' : ''}`}
+                        style={{ animationDuration: `${config.logoFadeInDuration}ms` }}
+                      />
+                      <h2 id="welcome-msg" className='welcome-msg'  style={{height: "39px"}}>
+                        {displayedWords.map((word, index) => (
+                          <span key={index} className="word" style={{ opacity: 1, transition: 'opacity 0.5s' }}>
+                            {word}&nbsp;
+                          </span>
+                        ))}
+                      </h2>
+                      <div className='subtext-wrapper' style={{height: "20px"}}>
+                        {subtextVisible && (
+                          <p
+                          id="welcome-subtext"
+                          className='welcome-subtext fade-in'
+                          style={{ animationDuration: `${config.subtextFadeInDuration}ms` }}
+                          >
+                            From prompt to fully functional websites in a few clicks
+                          </p>
+                        )}
+                      </div>
+                      <h2 id="sub-header" className='sub-header'>Make me a website for:</h2>
                       <div className="button-grid">
-                        <button onClick={() => handleClick(`
-                          Make a website with 3 famous fully functioning complex 3D videogames based on already popular games. Have a header at the top of the page. Have an interesting way to 
-                          navigate with fun transitions between the pages of videogames. The site should have a specific style and vibe you can choose for the colors and text.  
-                          I'd also like a background image behind each game matching their atmospheres. Make up fictional details that seem real to make the content more interesting and engaging, like 
-                          funny pun titles for each game on each page.
-                        `)}>
+                      <button onClick={() => handleClick(`
+  Could you generate a website with just a fully functioning Snake game using JavaScript? 
+  - With a snake game, you have randomly spawning apples and a snake that you must move around with the arrow keys.  
+  - Each apple eaten makes the snake longer.
+  - If the snake runs into itself or a wall, you lose the game. We should show a 'You Lose' message if that happens.
+  - If the snake manages to fill the screen, the player wins. We should display a 'You Win' message if that happens.
+  - It should have a restart game button.
+  - Make the snake game about 800px by 800px.
+  - Have a header at the top of the page that says 'Mike's Awesome Snake Game!'
+
+  The site should have a futuristic TRON style vibe with dark colors and bright neon text. I'd also like a background image behind the game of a TRON-like landscape.
+`)}> 
                           Custom Videogames
                         </button>
                         <button onClick={() => handleClick(`
@@ -535,7 +622,7 @@ function App() {
                           more interesting, like creative product names or unique selling points, such as ‘A scarf
                           that’s also a hoodie’ or ‘Eco-friendly sneakers made from recycled ocean plastic'.
                         `)}>
-                          E-commerce Storefronts 
+                          E-commerce Storefronts
                         </button>
                         <button onClick={() => handleClick(`
                           Design a health and fitness blog that is clean, motivating, and informative. The homepage
@@ -560,7 +647,7 @@ function App() {
                           users interact on the site, like clever captions or trending hashtags that seem authentic
                           and engaging.
                         `)}>
-                          Social Media Sites 
+                          Social Media Sites
                         </button>
                         <button onClick={() => handleClick(`
                           Build a travel agency website that is visually stunning and immersive. The homepage should
@@ -573,7 +660,7 @@ function App() {
                           fonts. Make up fictional travel packages and unique destinations to make the site more
                           engaging, like ‘a cruise to the hidden waterfalls of the Pacific’ or ‘a secluded desert safari’.
                         `)}>
-                          Travel Agent Sites 
+                          Travel Agent Sites
                         </button>
                         <button onClick={() => handleClick(`
                           Design a news website with a sleek, modern layout. The homepage should have a breaking

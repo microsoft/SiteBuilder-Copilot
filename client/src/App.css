@@ -589,3 +589,26 @@ button:hover {
     background: rgba(0, 0, 0, 0.5);
   }
 }
+
+/* Initially hide all elements */
+.welcome-logo,
+.welcome-subtext {
+  opacity: 0;
+}
+
+/* Fade-in animation for the logo */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Fade-in class */
+.fade-in {
+  animation: fadeIn forwards;
+}
+
+/* Styling for welcome message words */
+.word {
+  opacity: 0;
+  display: inline-block;
+}
