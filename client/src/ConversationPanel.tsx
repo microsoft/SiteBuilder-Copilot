@@ -126,7 +126,7 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
           </div>
         </div>
       </div>
-      <div id="conversations-container">
+            <div id="conversations-container">
       {conversations.length === 0 ? (
           <div className="conversation">
             <div className="ai-response">
@@ -135,18 +135,20 @@ const ConversationPanel: React.FC<ConversationPanelProps> = ({
           </div>
         ) : (
           conversations.map((conversation, index) => (
-            <div key={index} className="conversation">
-              <div className="submitted-prompt">
-                {renderContent(parseFiles(conversation.prompt))}
+            (
+              <div key={index} className="conversation">
+                <div className="submitted-prompt">
+                  {renderContent(parseFiles(conversation.prompt))}
+                </div>
+                <div id="ai-response-container">
+                  <div
+                    className="ai-response"
+                    dangerouslySetInnerHTML={{ __html: '<b>Copilot:</b> ' + conversation.response.message.replace(/```json\s*$/, '').trimEnd() }}
+                  />
+                  {renderResponseSuggestions(conversation.response)}
+                </div>
               </div>
-              <div id="ai-response-container">
-                <div
-                  className="ai-response"
-                  dangerouslySetInnerHTML={{ __html: '<b>Copilot:</b> ' + conversation.response.message }}
-                />
-                {renderResponseSuggestions(conversation.response)}
-              </div>
-            </div>
+            )
           ))
         )}
       </div>

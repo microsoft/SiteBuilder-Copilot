@@ -215,8 +215,11 @@ def get_messages(sessionId):
     try:
         agents = agent_factory.get_or_create_agents(sessionId)
         orchestrator_agent = agents["orchestrator_agent"]
-        
-        return jsonify({'messages': orchestrator_agent.get_messages()}), 200
+        messages = orchestrator_agent.get_messages()
+        filtered_messages = [msg for msg in messages if not msg['content'].startswith("File content:")]
+
+
+        return jsonify({'messages': filtered_messages}), 200
     except Exception as e:
         print(e)
         return jsonify({'error': str(e)}), 500        
