@@ -552,7 +552,7 @@ function App() {
                     <div className="welcome-message">
                     <img
                         id="welcome-logo"
-                        src="/copilot.svg"
+                        src="/sitebuilder_temp_icon.svg"
                         alt="Logo"
                         className={`main-logo ${logoVisible ? 'fade-in' : ''}`}
                         style={{ animationDuration: `${config.logoFadeInDuration}ms` }}
