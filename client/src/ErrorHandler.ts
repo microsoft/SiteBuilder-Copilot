@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 class ErrorHandler {
     static logError(error: any) {
         // Log error details (e.g., send to a monitoring service)

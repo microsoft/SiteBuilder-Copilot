@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 export class Prompts {
     static SnakeGame = `
     Could you generate a website with just a fully functioning Snake game using JavaScript? 

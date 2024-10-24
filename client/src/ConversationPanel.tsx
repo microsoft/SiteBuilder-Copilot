@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import React from "react";
 import './ConversationPanel.css';
 import { SessionDetails } from './types/SessionTypes';

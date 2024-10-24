@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import React, { ReactElement, useState } from "react";
 import { TabItemProps, TabListProps } from "../types/TabTypes";
 import './TabComponents.css'; // Ensure you import the CSS file

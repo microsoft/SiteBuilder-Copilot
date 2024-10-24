@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 // https://blog.logrocket.com/how-to-build-tab-component-react/
 import { ReactElement, ReactNode } from "react";
 

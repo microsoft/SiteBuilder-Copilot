@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from agents import AzureOpenAIAgent, DallEAgent
 from config import config
 import os

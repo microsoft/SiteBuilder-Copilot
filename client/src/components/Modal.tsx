@@ -1,4 +1,5 @@
-
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 import React, { useState, useEffect } from "react";
 import { ModalTypeProps } from "../types/ModalTypes";
